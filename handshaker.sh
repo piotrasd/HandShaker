@@ -4,10 +4,10 @@ fapscan()
 {
 		clear
 		gnome-terminal --geometry=130x20 -x airodump-ng mon0 -w $HOME/tmp --output-format=csv&
-		$COLOR 2;echo "[*] Scanning for AP's with names like $ESSID [*]";$COLOR 9
+		$COLOR 2;echo "[*] Scanning for AP's with names like $PARTIALESSID [*]";$COLOR 9
 		sleep $SCN
 		killall airodump-ng
-		DONE=$( cat $HOME/tmp-01.csv | grep $ESSID ) 
+		DONE=$( cat $HOME/tmp-01.csv | grep $PARTIALESSID ) 
 		if [ $DONE -z ] 2> /dev/null
 			then
 				echo
@@ -18,13 +18,14 @@ fapscan()
 				csvtool col 4,14 $HOME/tmp-01.csv > $HOME/tmp3.csv
 				csvtool col 1,14 $HOME/tmp-01.csv > $HOME/tmp4.csv
 				
-				if [ $(cat tmp3.csv | grep $ESSID | cut -c 2) = "," ]
+				if [ $(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 2) = "," ] 2> /dev/null
 					then
-						CHAN=$(cat $HOME/tmp3.csv | grep $ESSID | cut -c 1)
+						CHAN=$(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 1)
 					else
-						CHAN=$(cat $HOME/tmp3.csv | grep $ESSID | cut -c 1-2)
+						CHAN=$(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 1-2)
 				fi
-				BSSID=$(cat $HOME/tmp4.csv | grep $ESSID | cut -c 1-17)
+				BSSID=$(cat $HOME/tmp4.csv | grep $PARTIALESSID | cut -c 1-17)
+				ESSID=$(cat $HOME/tmp4.csv | grep $PARTIALESSID | cut -d ',' -f 2)
 				fclientscan
 		fi
 		sleep $SLP
@@ -48,7 +49,8 @@ fclientscan()
 		then
 			CHAN=${CHAN:0:1}
 	fi
-	$COLOR 2;echo " [*] AP Found BSSID: $BSSID CHANNEL: $CHAN"
+	$COLOR 2;echo " [*] $ESSID Found!    BSSID: $BSSID    CHANNEL: $CHAN"
+	echo
 	$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
 	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 	if [ $CHKBIT = 0 ] 2> /dev/null
@@ -129,11 +131,11 @@ fcap()
 	echo
 	$COLOR 4;echo "[*] Saving and Stripping capture, please wait... [*]"
 	echo
-	pyrit -r "$HOME"/Desktop/hs/"$FILENAME"-01.cap -o "$HOME"/Desktop/hs/$FILENAME2 strip;$COLOR 9
-	rm "$HOME"/Desktop/hs/"$FILENAME"-01.cap
+	pyrit -r $HOME/Desktop/hs/"$FILENAME"-01.cap -o $HOME/Desktop/hs/$FILENAME2 strip;$COLOR 9
+	rm $HOME/Desktop/hs/"$FILENAME"-01.cap
 	airmon-ng stop mon0&
 	rm -rf $HOME/tmp*
-	ISGOOD=$(pyrit -r "$HOME"/Desktop/hs/$FILENAME2 analyze | grep good)
+	ISGOOD=$(pyrit -r $HOME/Desktop/hs/$FILENAME2 analyze | grep good)
 	
 	if [ ${ISGOOD:0:5} = '#' ] 2> /dev/null
 		then
@@ -154,10 +156,10 @@ fcap()
 				"N")fexit
 			esac
 		else
-			$COLOR 1;echo " [*] Sorry, looks like there is a problem with captured handshake";$COLOR 9
+			$COLOR 1;echo " [*] Sorry, handshake not captured";$COLOR 9
 			echo
-			$COLOR 1;pyrit -r "$HOME"/Desktop/hs/$FILENAME2 analyze;$COLOR 9
-			rm -rf "$HOME"/Desktop/hs/$FILENAME2
+			pyrit -r $HOME/Desktop/hs/$FILENAME2 analyze | grep "Not valid"
+			rm -rf $HOME/Desktop/hs/$FILENAME2
 			echo
 	fi
 	exit
@@ -190,9 +192,9 @@ fexit()
 fhelp()
 {
 	clear
-	echo """ HandShaker - detect, deauth and capture handshakes by ESSID
+	echo """ HandShaker - detect, deauth and capture handshakes by PARTIALESSID
 	Usage: handshaker x 
-			x - Partial unique ESSID (required)
+			x - Partial unique PARTIALESSID (required)
 
 				
 	eg. handshaker BTHub3-F
@@ -211,7 +213,7 @@ SLP=5
 SCN=10
 STATSC="0"
 MOND=$(ifconfig | grep mon0)
-mkdir -p "$HOME"/Desktop/hs
+mkdir -p $HOME/Desktop/hs
 
 if [ $MOND -z ] 2> /dev/null
 	then
@@ -233,7 +235,7 @@ fapscan
 
 trap fexit 2
 
-ESSID="$1"
+PARTIALESSID="$1"
 if [ $# -lt 1 ]
 	then
 		fhelp
