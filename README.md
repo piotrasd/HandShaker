@@ -5,7 +5,7 @@ Detect, capture and crack handshakes by partial ESSID.
 
 This is script is designed to automate the task of capturing and cracking a WPA/2 EAPOL handshake.
 
-Usage: handshaker x y z
+	Usage: handshaker x y z
   
 			x - Partial unique ESSID (required)
 			y - Wireless Interface card
