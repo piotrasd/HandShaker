@@ -159,8 +159,6 @@ fcap()
 			$COLOR 4;echo $ISGOOD;$COLOR 9
 			echo
 			$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/hs/$FILENAME2";$COLOR 9
-			echo
-			echo
 			if [ $WORDLIST -z ] 2> /dev/null
 				then
 					$COLOR 4; echo " [>] Do you want to crack? [Y/n]";$COLOR 9
@@ -208,8 +206,14 @@ fexit()
 {
 			tput setab 9
 			killall aircrack-ng 2> /dev/null
-			airmon-ng stop mon0
 			rm -rf $HOME/tmp* 2> /dev/null
+			MOND=$(ifconfig | grep mon0)
+			if [ $MOND -z ] 2> /dev/null
+				then
+					exit
+				else
+					airmon-ng stop mon0
+			fi
 			exit
 }
 
