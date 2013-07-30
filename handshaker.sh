@@ -23,19 +23,12 @@ fapscan()
 		do
 			DONE=$( cat $HOME/tmp-01.csv 2> /dev/null | grep $PARTIALESSID ) 
 		done
-
+	sleep 0.5
 	killall airodump-ng
-	csvtool col 4,14 $HOME/tmp-01.csv > $HOME/tmp3.csv
-	csvtool col 1,14 $HOME/tmp-01.csv > $HOME/tmp4.csv
-	
-	if [ $(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 2) = "," ] 2> /dev/null
-		then
-			CHAN=$(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 1)
-		else
-			CHAN=$(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 1-2)
-	fi
-	BSSID=$(cat $HOME/tmp4.csv | grep $PARTIALESSID | cut -c 1-17)
-	ESSID=$(cat $HOME/tmp4.csv | grep $PARTIALESSID | cut -d ',' -f 2)
+	CHAN=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 4 | head -1)
+	cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 1 | head -1 > $HOME/tmp4.csv
+	ESSID=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 14 | head -1)
+	BSSID=$(cat $HOME/tmp4.csv)
 	fclientscan
 	sleep $SLP
 	fapscan
@@ -43,47 +36,44 @@ fapscan()
 
 fclientscan()
 {
-	if [ ${BSSID:2:1} != ":" ] 2> /dev/null
-		then
-			rm -rf $HOME/tmp* 2> /dev/null
-			fapscan
-	fi
-		
-	rm -rf $HOME/tmp* 2> /dev/null
-	CNT="0"
-	clear
-	if [ ${CHAN:1:1} = "," ] 2> /dev/null
-		then
-			CHAN=${CHAN:0:1}
-	fi
-	$COLOR 2;echo " [*]  $ESSID Found!    BSSID: $BSSID    CHANNEL: $CHAN [*]"
-	echo
-	$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
-	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
-	
-	DONE=""
-	while [ $DONE -z ] 2> /dev/null
-		do
-			DONE=$( cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 ) 
-		done
-	
-	echo "$DONE" > $HOME/tmp
-	while read LINE
-		do
-			if [ ${LINE:0:4} != "Stat" ] 2> /dev/null
-				then
-					echo ${LINE:0:17} >> $HOME/tmp1
-			fi
-		done < $HOME/tmp
-	while read LINE
-		do
-			case ${LINE:2:1} in
-			":")CNT=$(( CNT + 1 ));;
-			esac
-		done < $HOME/tmp1
-	
-	killall airodump-ng
-	fcap
+		if [ ${BSSID:2:1} != ":" ] 2> /dev/null
+			then
+				rm -rf $HOME/tmp* 2> /dev/null
+				fapscan
+		fi
+		rm -rf $HOME/tmp* 2> /dev/null
+		CNT="0"
+		clear
+		if [ ${CHAN:1:1} = "," ] 2> /dev/null
+			then
+				CHAN=${CHAN:0:1}
+		fi
+		$COLOR 2;echo " [*] $ESSID Found! BSSID: $BSSID CHANNEL: $CHAN [*]"
+		echo
+		$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
+		gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
+		DONE=""
+		while [ $DONE -z ] 2> /dev/null
+			do
+				DONE=$( cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 | grep $BSSID )
+			done
+		killall airodump-ng
+		DONE=$( cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10)
+		echo "$DONE" > $HOME/tmp
+		while read LINE
+			do
+				if [ ${LINE:0:4} != "Stat" ] 2> /dev/null
+					then
+						echo ${LINE:0:17} >> $HOME/tmp1
+				fi
+			done < $HOME/tmp
+		while read LINE
+			do
+				case ${LINE:2:1} in
+				":")CNT=$(( CNT + 1 ));;
+				esac
+			done < $HOME/tmp1
+		fcap
 }
 
 fcap()
@@ -103,8 +93,13 @@ fcap()
 		then
 			CLIE=$(head -1 $HOME/tmp1)
 	fi
-	FILENAME="$ESSID"
-	FILENAME2=""$ESSID".cap"
+	FILENAME="${ESSID:1}"
+	FILENAME2=""${ESSID:1}".cap"
+	while [ ${CHAN:0:1} = " " ] 2> /dev/null
+		do
+			CHAN="${CHAN:1}"
+	done
+	sleep 0.5
 	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME --output-format pcap&
 	clear
 	echo
