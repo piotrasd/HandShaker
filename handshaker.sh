@@ -103,8 +103,8 @@ fcap()
 		then
 			CLIE=$(head -1 $HOME/tmp1)
 	fi
-	FILENAME="$BSSID""--""$RANDOM"
-	FILENAME2="$BSSID""-""$RANDOM"".cap"
+	FILENAME="$ESSID"
+	FILENAME2=""$ESSID".cap"
 	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME --output-format pcap&
 	$COLOR 1; echo " [*] DEAUTHING $CLIE";$COLOR 9
 	echo
@@ -113,7 +113,9 @@ fcap()
 	while [ true ]
 		do
 			clear
-			$COLOR 2;echo " [*] You should see [ WPA handshake: $BSSID ] in the airodump window if successful [*]"
+			$COLOR 2;echo " [*] You should see ";$COLOR 9
+			echo " [ WPA handshake: $BSSID "
+			$COLOR 2;echo " [^] in the airodump window if successful [^]";$COLOR 9
 			echo
 			$COLOR 4;read -p " [*] was the hanshake successfully captured? [Y/n]: " WASCAP;$COLOR 9
 			if [ $WASCAP = "n" ] 2> /dev/null
