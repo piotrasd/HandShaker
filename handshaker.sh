@@ -46,6 +46,7 @@ fclientscan()															#Find active clients
 	rm -rf $HOME/tmp* 2> /dev/null
 	CNT="0"
 	clear
+	ESSID=${ESSID:1}
 	$COLOR 2;echo " [*] $ESSID Found! BSSID:$BSSID CHANNEL:$CHAN [*]"
 	echo
 	$COLOR 4;echo ' [*] Please wait while I find active clients.. [*]';$COLOR 9
@@ -79,7 +80,7 @@ fcap()																	#Deauth, capture and strip handshakes
 			CLIE=$(head -1 $HOME/tmp1)
 		else
 			$COLOR 2;echo " [*] $CNT active clients found:";$COLOR 9
-			cat $HOME/tmp
+			cat $HOME/tmp1
 			echo
 			$COLOR 4;echo " [>] Please paste client MAC or Press Enter to use the first one:";$COLOR 9 
 			read -p "  >" CLIE
@@ -88,8 +89,6 @@ fcap()																	#Deauth, capture and strip handshakes
 		then
 			CLIE=$(head -1 $HOME/tmp1)
 	fi
-	FILENAME="${ESSID:1}"
-	FILENAME2="${ESSID:1}"
 	clear
 	echo
 	DONE=""
@@ -107,18 +106,20 @@ fcap()																	#Deauth, capture and strip handshakes
 			sleep 0.5
 		done
 		
-	$COLOR 2;echo " [*] Handshake capture successful! "
+	$COLOR 2;echo " [*] Handshake capture successful! "; $COLOR 9
 	killall airodump-ng
-	echo
+	clear
 	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*]";$COLOR 9
-	DATER=$( date +%Y_%m_%d_%H%M%S )
-	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap" strip | grep 'New pcap-file'
+	DATE=$( date +%Y_%m_%d_%H%M%S )
+	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
 	airmon-ng stop mon0
 	rm -rf $HOME/tmp*
+	clear
 	$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you";$COLOR 9
+	echo
 	$COLOR 4;echo $DONE;$COLOR 9
 	echo
-	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"";$COLOR 9
+	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap"";$COLOR 9
 	if [ $WORDLIST -z ] 2> /dev/null
 		then
 			$COLOR 4; echo " [>] Do you want to crack now? [Y/n]";$COLOR 9
@@ -151,7 +152,7 @@ fcrack()																#Crack handshakes
 			sleep 1
 			fcrack
 		else
-			aircrack-ng -w $WORDLIST $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"
+			aircrack-ng -w $WORDLIST $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap"
 	fi
 	fexit
 }
@@ -205,7 +206,7 @@ fstart()																#Startup
 			echo
 			read -p "  >" NIC
 			clear
-			airmon-ng start $NIC 2> /dev/null
+			airmon-ng start $NIC
 			clear
 		else
 			NIC="mon0"
@@ -228,7 +229,7 @@ if [ ! -z $2 ] 2> /dev/null
 		MOND=$(ifconfig | grep mon0)
 		if [ $MOND -z ] 2> /dev/null
 			then
-				airmon-ng start $2 2> /dev/null
+				airmon-ng start $2
 		fi
 fi
 if [ $# -lt 1 ]
