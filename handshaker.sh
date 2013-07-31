@@ -27,6 +27,7 @@ fapscan()																#Determine AP BSSID and channel
 	sleep 0.5
 	killall airodump-ng
 	CHAN=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 4 | head -1)
+	CHAN=$((CHAN + 1 - 1))
 	cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 1 | head -1 > $HOME/tmp4.csv
 	ESSID=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 14 | head -1)
 	BSSID=$(cat $HOME/tmp4.csv)
@@ -45,10 +46,6 @@ fclientscan()															#Find active clients
 	rm -rf $HOME/tmp* 2> /dev/null
 	CNT="0"
 	clear
-	if [ ${CHAN:1:1} = "," ] 2> /dev/null
-		then
-			CHAN=${CHAN:0:1}
-	fi
 	$COLOR 2;echo " [*] $ESSID Found! BSSID:$BSSID CHANNEL:$CHAN [*]"
 	echo
 	$COLOR 4;echo ' [*] Please wait while I find active clients.. [*]';$COLOR 9
@@ -93,10 +90,6 @@ fcap()																	#Deauth, capture and strip handshakes
 	fi
 	FILENAME="${ESSID:1}"
 	FILENAME2="${ESSID:1}"
-	while [ ${CHAN:0:1} = " " ] 2> /dev/null
-		do
-			CHAN="${CHAN:1}"
-	done
 	clear
 	echo
 	DONE=""
@@ -120,37 +113,25 @@ fcap()																	#Deauth, capture and strip handshakes
 	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*]";$COLOR 9
 	DATER=$( date +%Y_%m_%d_%H%M%S )
 	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap" strip | grep 'New pcap-file'
-	airmon-ng stop mon0&
+	airmon-ng stop mon0
 	rm -rf $HOME/tmp*
-	ISGOOD=$(pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap" analyze | grep good)
-	
-	if [ ${ISGOOD:0:5} = '#' ] 2> /dev/null
+	$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you";$COLOR 9
+	$COLOR 4;echo $DONE;$COLOR 9
+	echo
+	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"";$COLOR 9
+	if [ $WORDLIST -z ] 2> /dev/null
 		then
-			clear
-			$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you";$COLOR 9
-			$COLOR 4;echo $ISGOOD;$COLOR 9
-			echo
-			$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"";$COLOR 9
-			if [ $WORDLIST -z ] 2> /dev/null
-				then
-					$COLOR 4; echo " [>] Do you want to crack now? [Y/n]";$COLOR 9
-					read -p "  >" DOCRK
-					case $DOCRK in
-						"")fcrack;;
-						"Y")fcrack;;
-						"y")fcrack;;
-						"n")fexit;;
-						"N")fexit
-					esac
-				else
-					fcrack
-			fi
+			$COLOR 4; echo " [>] Do you want to crack now? [Y/n]";$COLOR 9
+			read -p "  >" DOCRK
+			case $DOCRK in
+				"")fcrack;;
+				"Y")fcrack;;
+				"y")fcrack;;
+				"n")fexit;;
+				"N")fexit
+			esac
 		else
-			$COLOR 1;echo " [*] Sorry, handshake not captured";$COLOR 9
-			echo
-			pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap" analyze | grep "Not valid"
-			rm -rf $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"
-			echo
+			fcrack
 	fi
 	fexit
 }
@@ -224,7 +205,7 @@ fstart()																#Startup
 			echo
 			read -p "  >" NIC
 			clear
-			airmon-ng start $NIC
+			airmon-ng start $NIC 2> /dev/null
 			clear
 		else
 			NIC="mon0"
@@ -247,7 +228,7 @@ if [ ! -z $2 ] 2> /dev/null
 		MOND=$(ifconfig | grep mon0)
 		if [ $MOND -z ] 2> /dev/null
 			then
-				airmon-ng start $2
+				airmon-ng start $2 2> /dev/null
 		fi
 fi
 if [ $# -lt 1 ]
