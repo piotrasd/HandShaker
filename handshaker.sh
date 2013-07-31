@@ -95,7 +95,7 @@ fcap()
 			CLIE=$(head -1 $HOME/tmp1)
 	fi
 	FILENAME="${ESSID:1}"
-	FILENAME2=""${ESSID:1}".cap"
+	FILENAME2="${ESSID:1}"
 	while [ ${CHAN:0:1} = " " ] 2> /dev/null
 		do
 			CHAN="${CHAN:1}"
@@ -127,11 +127,12 @@ fcap()
 	echo
 	$COLOR 4;echo "[*] Saving and Stripping capture, please wait... [*]"
 	echo
-	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$FILENAME2 strip;$COLOR 9
+	DATER=$( date +%Y_%m_%d_%H%M%S )
+	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap" strip;$COLOR 9
 	rm $HOME/tmp1-01.cap
 	airmon-ng stop mon0&
 	rm -rf $HOME/tmp*
-	ISGOOD=$(pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2 analyze | grep good)
+	ISGOOD=$(pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap" analyze | grep good)
 	
 	if [ ${ISGOOD:0:5} = '#' ] 2> /dev/null
 		then
@@ -139,7 +140,7 @@ fcap()
 			$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you";$COLOR 9
 			$COLOR 4;echo $ISGOOD;$COLOR 9
 			echo
-			$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$FILENAME2";$COLOR 9
+			$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"";$COLOR 9
 			if [ $WORDLIST -z ] 2> /dev/null
 				then
 					$COLOR 4; echo " [>] Do you want to crack? [Y/n]";$COLOR 9
@@ -157,8 +158,8 @@ fcap()
 		else
 			$COLOR 1;echo " [*] Sorry, handshake not captured";$COLOR 9
 			echo
-			pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2 analyze | grep "Not valid"
-			rm -rf $HOME/Desktop/cap/handshakes/$FILENAME2
+			pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap" analyze | grep "Not valid"
+			rm -rf $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"
 			echo
 	fi
 	exit
@@ -179,7 +180,7 @@ fcrack()
 			sleep 1
 			fcrack
 		else
-			aircrack-ng -w $WORDLIST $HOME/Desktop/cap/handshakes/$FILENAME2
+			aircrack-ng -w $WORDLIST $HOME/Desktop/cap/handshakes/$FILENAME2-$DATER".cap"
 	fi
 }
 
@@ -187,7 +188,7 @@ fexit()
 {
 			tput setab 9
 			killall aircrack-ng 2> /dev/null
-			#rm -rf $HOME/tmp* 2> /dev/null
+			rm -rf $HOME/tmp* 2> /dev/null
 			MOND=$(ifconfig | grep mon0)
 			if [ $MOND -z ] 2> /dev/null
 				then
