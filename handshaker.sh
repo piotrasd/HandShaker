@@ -102,7 +102,7 @@ fcap()
 			CHAN="${CHAN:1}"
 	done
 	sleep 0.5
-	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/hs/$FILENAME -o pcap&
+	gnome-terminal --geometry=130x20 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w "$HOME"/Desktop/cap/handshakes/$FILENAME -o pcap&
 	clear
 	echo
 	DONE=""
@@ -126,11 +126,11 @@ fcap()
 	echo
 	$COLOR 4;echo "[*] Saving and Stripping capture, please wait... [*]"
 	echo
-	pyrit -r $HOME/Desktop/hs/"$FILENAME"-01.cap -o $HOME/Desktop/hs/$FILENAME2 strip;$COLOR 9
-	rm $HOME/Desktop/hs/"$FILENAME"-01.cap
+	pyrit -r $HOME/Desktop/cap/handshakes/"$FILENAME"-01.cap -o $HOME/Desktop/cap/handshakes/$FILENAME2 strip;$COLOR 9
+	rm $HOME/Desktop/cap/handshakes/"$FILENAME"-01.cap
 	airmon-ng stop mon0&
 	rm -rf $HOME/tmp*
-	ISGOOD=$(pyrit -r $HOME/Desktop/hs/$FILENAME2 analyze | grep good)
+	ISGOOD=$(pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2 analyze | grep good)
 	
 	if [ ${ISGOOD:0:5} = '#' ] 2> /dev/null
 		then
@@ -138,7 +138,7 @@ fcap()
 			$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you";$COLOR 9
 			$COLOR 4;echo $ISGOOD;$COLOR 9
 			echo
-			$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/hs/$FILENAME2";$COLOR 9
+			$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$FILENAME2";$COLOR 9
 			if [ $WORDLIST -z ] 2> /dev/null
 				then
 					$COLOR 4; echo " [>] Do you want to crack? [Y/n]";$COLOR 9
@@ -156,8 +156,8 @@ fcap()
 		else
 			$COLOR 1;echo " [*] Sorry, handshake not captured";$COLOR 9
 			echo
-			pyrit -r $HOME/Desktop/hs/$FILENAME2 analyze | grep "Not valid"
-			rm -rf $HOME/Desktop/hs/$FILENAME2
+			pyrit -r $HOME/Desktop/cap/handshakes/$FILENAME2 analyze | grep "Not valid"
+			rm -rf $HOME/Desktop/cap/handshakes/$FILENAME2
 			echo
 	fi
 	exit
@@ -178,7 +178,7 @@ fcrack()
 			sleep 1
 			fcrack
 		else
-			aircrack-ng -w $WORDLIST $HOME/Desktop/hs/$FILENAME2
+			aircrack-ng -w $WORDLIST $HOME/Desktop/cap/handshakes/$FILENAME2
 	fi
 }
 
@@ -219,7 +219,8 @@ COLOR="tput setab"
 COLOR2="tput setaf"
 CHKEX=1
 MOND=$(ifconfig | grep mon0)
-mkdir -p $HOME/Desktop/hs
+mkdir -p $HOME/Desktop/cap
+mkdir -p $HOME/Desktop/cap/handshakes
 
 if [ $MOND -z ] 2> /dev/null
 	then
