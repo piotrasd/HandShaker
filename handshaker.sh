@@ -199,7 +199,8 @@ fstart()																#Startup
 			echo
 			iwconfig | grep "wlan"
 			echo
-			read -p "  >" NIC
+			read -p "  >wlan" NIC
+			NIC="wlan"$NIC
 			clear
 			airmon-ng start $NIC
 			clear
@@ -207,6 +208,9 @@ fstart()																#Startup
 			NIC="mon0"
 			clear
 	fi
+	ifconfig mon0 down
+	macchanger -a mon0
+	ifconfig mon0 up
 	fapscan
 }
 
