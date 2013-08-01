@@ -14,10 +14,10 @@
 ## more details.
 
 
-fapscan()																#Determine AP BSSID and channel
+fapscan()																#Determine target AP BSSID and channel
 {
 	clear
-	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -a -w $HOME/tmp -o csv&
+	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -a -w $HOME/tmp -o csv --encrypt WPA&
 	$COLOR 2;echo " [*] Scanning for AP's with names like $PARTIALESSID [*] ";$COLOR 9
 	while [ $DONE -z ] 2> /dev/null
 		do
@@ -36,6 +36,67 @@ fapscan()																#Determine AP BSSID and channel
 	CHAN=$((CHAN + 1 - 1))
 	cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 1 | head -1 > $HOME/tmp4.csv
 	BSSID=$(cat $HOME/tmp4.csv)
+	fclientscan
+}
+
+flistap()																#List all APs
+{
+	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -a -w $HOME/tmp -o csv --encrypt WPA&
+	clear
+	$COLOR 4;echo " [*] Scanning for APs, Please wait.. ";$COLOR 9
+	sleep 10
+	killall airodump-ng
+	echo "$(cat $HOME/tmp-01.csv | grep WPA | cut -d ',' -f 14)" > $HOME/tmp1
+	LNUM=0
+	while read LINE
+		do
+			LNUM=$((LNUM + 1))
+			case $LNUM in
+				1)ESSID1=" [1] $LINE";;
+				2)ESSID2=" [2] $LINE";;
+				3)ESSID3=" [3] $LINE";;
+				4)ESSID4=" [4] $LINE";;
+				5)ESSID5=" [5] $LINE";;
+				6)ESSID6=" [6] $LINE";;
+				7)ESSID7=" [7] $LINE";;
+				8)ESSID8=" [8] $LINE";;
+				9)ESSID9=" [9] $LINE"
+			esac
+		done <$HOME/tmp1
+	clear
+	$COLOR 4;echo " [*] $LNUM APs found:";$COLOR 9
+	DNUM=0
+	while [ $DNUM -le $LNUM ]
+		do
+			DNUM=$((DNUM + 1))
+			case $DNUM in
+				1)echo $ESSID1;;
+				2)echo $ESSID2;;
+				3)echo $ESSID3;;
+				4)echo $ESSID4;;
+				5)echo $ESSID5;;
+				6)echo $ESSID6;;
+				7)echo $ESSID7;;
+				8)echo $ESSID8;;
+				9)echo $ESSID9
+			esac
+		done
+	$COLOR 4;echo " [>] Please choose an AP ";$COLOR 9
+	read -p "  >" AP
+	case $AP in
+				1)ESSID=${ESSID1:5};;
+				2)ESSID=${ESSID2:5};;
+				3)ESSID=${ESSID3:5};;
+				4)ESSID=${ESSID4:5};;
+				5)ESSID=${ESSID5:5};;
+				6)ESSID=${ESSID6:5};;
+				7)ESSID=${ESSID7:5};;
+				8)ESSID=${ESSID8:5};;
+				9)ESSID=${ESSID9:5}
+	esac
+	BSSID=$(cat $HOME/tmp-01.csv | grep WPA | grep $ESSID | cut -d ',' -f 1)
+	CHAN=$(cat $HOME/tmp-01.csv | grep WPA | grep $ESSID | cut -d ',' -f 4)
+	CHAN=$((CHAN + 1 - 1))
 	fclientscan
 }
 
@@ -179,67 +240,6 @@ fhelp()																	#Help
 				
 	eg. handshaker Hub3-F wlan0 /usr/share/wordlists/rockyou.txt"""
 	exit
-}
-
-flistap()
-{
-	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -a -w $HOME/tmp -o csv --encrypt WPA&
-	clear
-	$COLOR 4;echo " [*] Scanning for APs, Please wait.. ";$COLOR 9
-	sleep 10
-	killall airodump-ng
-	echo "$(cat $HOME/tmp-01.csv | grep WPA | cut -d ',' -f 14)" > $HOME/tmp1
-	LNUM=0
-	while read LINE
-		do
-			LNUM=$((LNUM + 1))
-			case $LNUM in
-				1)ESSID1=" [1] $LINE";;
-				2)ESSID2=" [2] $LINE";;
-				3)ESSID3=" [3] $LINE";;
-				4)ESSID4=" [4] $LINE";;
-				5)ESSID5=" [5] $LINE";;
-				6)ESSID6=" [6] $LINE";;
-				7)ESSID7=" [7] $LINE";;
-				8)ESSID8=" [8] $LINE";;
-				9)ESSID9=" [9] $LINE"
-			esac
-		done <$HOME/tmp1
-	clear
-	$COLOR 4;echo " [*] $LNUM APs found:";$COLOR 9
-	DNUM=0
-	while [ $DNUM -le $LNUM ]
-		do
-			DNUM=$((DNUM + 1))
-			case $DNUM in
-				1)echo $ESSID1;;
-				2)echo $ESSID2;;
-				3)echo $ESSID3;;
-				4)echo $ESSID4;;
-				5)echo $ESSID5;;
-				6)echo $ESSID6;;
-				7)echo $ESSID7;;
-				8)echo $ESSID8;;
-				9)echo $ESSID9
-			esac
-		done
-	$COLOR 4;echo " [>] Please choose an AP ";$COLOR 9
-	read -p "  >" AP
-	case $AP in
-				1)ESSID=${ESSID1:5};;
-				2)ESSID=${ESSID2:5};;
-				3)ESSID=${ESSID3:5};;
-				4)ESSID=${ESSID4:5};;
-				5)ESSID=${ESSID5:5};;
-				6)ESSID=${ESSID6:5};;
-				7)ESSID=${ESSID7:5};;
-				8)ESSID=${ESSID8:5};;
-				9)ESSID=${ESSID9:5}
-	esac
-	BSSID=$(cat $HOME/tmp-01.csv | grep WPA | grep $ESSID | cut -d ',' -f 1)
-	CHAN=$(cat $HOME/tmp-01.csv | grep WPA | grep $ESSID | cut -d ',' -f 4)
-	CHAN=$((CHAN + 1 - 1))
-	fclientscan
 }
 
 fstart()																#Startup
