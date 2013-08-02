@@ -24,10 +24,10 @@ fautobot()																#Automagically find active clients and collect new han
 	$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
 	echo
 	$COLOR 1;echo " [>] EVALUATING TARGET: ";$COLOR 9
-	echo " [*] ESSID: $ESSID"
+	$COLOR2 1;echo " [*] ESSID: $ESSID"
 	echo " [*] BSSID: $BSSID"
 	echo " [*] CLIENT: $CLIE"
-	echo " [*] CHANNEL: $CHAN"
+	echo " [*] CHANNEL: $CHAN";$COLOR2 9
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
 	DONE=""
 	LNUM=0
@@ -53,10 +53,10 @@ fautobot()																#Automagically find active clients and collect new han
 			$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
 			echo
 			$COLOR 1;echo " [>] EVALUATING TARGET: ";$COLOR 9
-			echo " [*] ESSID: $ESSID"
+			$COLOR2 1;echo " [*] ESSID: $ESSID"
 			echo " [*] BSSID: $BSSID"
 			echo " [*] CLIENT: $CLIE"
-			echo " [*] CHANNEL: $CHAN"
+			echo " [*] CHANNEL: $CHAN";$COLOR2 9
 			if [ ${BSSID:2:1} = ":" ] 2> /dev/null
 				then
 					if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSID) -z ] 2> /dev/null
@@ -110,6 +110,12 @@ fautobot()																#Automagically find active clients and collect new han
 					DONE=""
 			fi
 			done
+	clear
+	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! ";$COLOR 9;$COLOR2 9
+	$COLOR 4;echo $DONE;$COLOR 9
+	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap "";$COLOR 9
+	echo
+	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT WILL RESUME IN 3 SECONDS [<] ";$COLOR 9;$COLOR2 9
 	GDONE=""
 	DONE=""
 	killall airodump-ng
@@ -118,12 +124,6 @@ fautobot()																#Automagically find active clients and collect new han
 	DATE=$( date +%Y_%m_%d_%H%M%S )
 	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
 	rm -rf $HOME/tmp*
-	clear
-	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! ";$COLOR 9;$COLOR2 9
-	$COLOR 4;echo $DONE;$COLOR 9
-	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap "";$COLOR 9
-	echo
-	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT WILL RESUME IN 3 SECONDS [<] ";$COLOR 9;$COLOR2 9
 	sleep 3
 	fautobot
 }		
