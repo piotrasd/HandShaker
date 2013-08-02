@@ -113,6 +113,7 @@ fanalyze()
 	
 while [ $(echo $ISDONE | grep $BSSID) -z ] 2> /dev/null
 	do
+		sleep 0.5
 		ISDONE=$(pyrit -r $HOME/tmp1-01.cap analyze)
 		if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
 			then
@@ -125,8 +126,16 @@ while [ $(echo $ISDONE | grep $BSSID) -z ] 2> /dev/null
 while [ $DONE2 -z ] 2> /dev/null
 	do
 		echo "$ISDONE" > $HOME/tmp4
+		if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
+			then
+				A=1
+			else
+				DONE2=1
+		fi
 		if [ $( cat $HOME/tmp4 | grep "bad") -z ] 2> /dev/null
 			then
+				A=1
+			else
 				DONE2=1
 		fi
 		
