@@ -6,9 +6,11 @@ Detect, capture and crack handshakes by partial ESSID.
 This is script is designed to automate the task of capturing and cracking a WPA/2 EAOPL handshake.
 
 	Usage: handshaker x y z
-  
-			x - Partial unique ESSID (required)
+	
+			x - Partial unique ESSID
 			y - Wireless Interface card
 			z - path to wordlist to use for cracking
 				
 	eg. handshaker Hub3-F wlan0 /usr/share/wordlists/rockyou.txt
+	handshaker -a or --autobot gets you autobot or wardriving mode
+	eg. handshaker -a wlan3
