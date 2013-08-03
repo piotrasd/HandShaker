@@ -73,7 +73,7 @@ fautobot()																#Automagically find active clients and collect new han
 	clear
 	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! [*] ";$COLOR 9;$COLOR2 9
 	echo
- 	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE [*] ".cap "";$COLOR 9
+ 	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap [*] ";$COLOR 9
 	echo
 	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT WILL RESUME IN 3 SECONDS [<] ";$COLOR 9;$COLOR2 9
 	GDONE=""
@@ -95,12 +95,17 @@ fhunt()																	#find active clients that havn't been handshaked yet for
 		do
 			sleep 0.2
 			BSSIDL="$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 6 | tr -d '(not associated)' | sed '/^$/d' | sort -uR | head -n 1)"
-			if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSIDL) -z ] 2> /dev/null
+			if [ $BSSIDL -z ] 2> /dev/null
 				then
-					BSSID=$BSSIDL
-					DONET=1
+					fhunt
 				else
-					DONET=""
+					if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSIDL) -z ] 2> /dev/null
+						then
+							BSSID=$BSSIDL
+							DONET=1
+						else
+							DONET=""
+					fi
 			fi
 			
 			ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 14 | head -n 1)
@@ -108,16 +113,30 @@ fhunt()																	#find active clients that havn't been handshaked yet for
 			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
 			CHAN=$((CHAN + 1 - 1))
 			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
-			clear
-			$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
-			echo
-			$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
-			echo
-			$COLOR 1;echo " [>] EVALUATING TARGET: ";$COLOR 9
-			$COLOR2 1;echo " [*] ESSID: $ESSID"
-			echo " [*] BSSID: $BSSID"
-			echo " [*] CLIENT: $CLIE"
-			echo " [*] CHANNEL: $CHAN";$COLOR2 9
+			if [ $ESSID -z ] 2>/dev/null
+				then
+					fhunt
+				else
+					if [ $BSSID -z ] 2> /dev/null
+						then
+							fhunt
+						else
+							if [ "$LASTBSSID" != "$BSSID" ] 2> /dev/null
+								then
+									clear
+									$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+									echo
+									$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
+									echo
+									$COLOR 1;echo " [>] EVALUATING TARGET: ";$COLOR 9
+									$COLOR2 1;echo " [*] ESSID: $ESSID"
+									echo " [*] BSSID: $BSSID"
+									echo " [*] CLIENT: $CLIE"
+									echo " [*] CHANNEL: $CHAN";$COLOR2 9
+							fi
+					fi
+			fi
+			
 			if [ $BSSID -z ] 2> /dev/null
 				then
 					DONET=""
@@ -130,6 +149,7 @@ fhunt()																	#find active clients that havn't been handshaked yet for
 				then
 					DONET=""
 			fi
+			LASTBSSID=$BSSID
 		done
 }
 
@@ -423,6 +443,7 @@ fhelp()																	#Help
 
 fstart()																#Startup
 {
+	LASTBSSID=";;"
 	COLOR="tput setab"
 	COLOR2="tput setaf"
 	CHKEX=1
