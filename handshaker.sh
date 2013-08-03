@@ -507,14 +507,15 @@ fstart()																#Startup
 			NIC="mon0"
 			clear
 	fi
-	ifconfig mon0 down
-	macchanger -a mon0
-	ifconfig mon0 up
 	
 	if [ $AUTO = "Y" ] 2> /dev/null
 		then
 			fbotstart
 	fi
+	
+	ifconfig mon0 down
+	macchanger -a mon0
+	ifconfig mon0 up
 	
 	if [ $DO = "L" ] 2> /dev/null
 	then
