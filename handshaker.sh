@@ -25,22 +25,11 @@ fbotstart()																#Automagically find active clients and collect new ha
 	$COLOR 4;echo " [*] Scanning for active clients.. ";$COLOR 9
 	echo
 	$COLOR 1;echo " [>] EVALUATING TARGET [<] ";$COLOR 9
-	$COLOR2 1;echo " [*] ESSID: $ESSID"
-	echo " [*] BSSID: $BSSID"
-	echo " [*] CLIENT: $CLIE"
-	echo " [*] CHANNEL: $CHAN"
-	echo " [*] POWER: $POWER";$COLOR2 9
-	if [ $BSSID -z ] 2> /dev/null  
-		then
-			A=1
-		else
-			if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSID) -z ] 2> /dev/null
-				then
-					$COLOR 1;echo " [*] We still need this handshake! [*] ";$COLOR 9
-				else
-					$COLOR 2;echo " [*] We just got this handshake! [*] ";$COLOR 9
-			fi	
-	fi
+	$COLOR2 1;echo " [*] ESSID: "
+	echo " [*] BSSID: "
+	echo " [*] CLIENT: "
+	echo " [*] CHANNEL: "
+	echo " [*] POWER: ";$COLOR2 9
 	gnome-terminal --geometry=130x80+0+0 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
 	DONE=""
 	LNUM=0
@@ -165,22 +154,24 @@ fautocap()
 					DONE=1
 				else
 					$COLOR 1; echo " [*] No handshake detected ";$COLOR 9
+					$COLOR 1; echo $ISDONE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
+					sleep 0.7
 					DONE=""
 			fi
-			done
+		done
 	clear
 	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! [*] ";$COLOR 9;$COLOR2 9
 	echo
+	ESSID=$(echo "$ESSID" | sed 's/ /_/g')
+	DATE=$( date +%Y_%m_%d_%H%M%S )
  	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap [*] ";$COLOR 9
+	$COLOR 4;$COLOR2 1;echo " [>] AUTOBOT WILL RESUME IN 3 SECONDS [<] ";$COLOR 9;$COLOR2 9
 	echo
-	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT WILL RESUME IN 3 SECONDS [<] ";$COLOR 9;$COLOR2 9
 	GDONE=""
-	DONE=""
 	killall airodump-ng
 	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
-	DATE=$( date +%Y_%m_%d_%H%M%S )
-	ESSID=$(echo "$ESSID" | sed 's/ /_/g')
 	pyrit -r $HOME/tmp1-01.cap -o "$HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap" strip | grep 'New pcap-file'
+	$COLOR 2;echo $ISDONE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
 	rm -rf $HOME/tmp*
 	sleep 3
 	fbotstart
@@ -462,6 +453,7 @@ fexit()																	#Exit
 fhelp()																	#Help
 {
 	clear
+	echo
 	echo """ HandShaker - Detect, capture and crack WPA/2 handshakes by partial unique ESSID
 	Usage: handshaker x y z
 	
@@ -470,7 +462,9 @@ fhelp()																	#Help
 			z - path to wordlist to use for cracking
 				
 	eg. handshaker Hub3-F wlan0 /usr/share/wordlists/rockyou.txt
-	Typing handshaker -a or --autobot gets you autobot or wardriving mode
+	handshaker -a or --autobot gets you autobot or wardriving mode
+	eg. handshaker -a wlan3
+	
 """
 	exit
 }
