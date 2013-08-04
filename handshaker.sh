@@ -15,6 +15,16 @@
 
 fbotstart()																#Automagically find active clients and collect new handshakes
 {	
+	if [ $(which beep) -z ] 2> /dev/null
+		then
+			$COLOR 1;echo " [*] You need beep to be able to hear new handshakes, do you want to install now? [Y/n] ";$COLOR 9
+			read -p "  >" DOINSTALL
+			case $DOINSTALL in
+				"")apt-get install beep;clear;sudo apt-get install beep;;
+				"y")apt-get install beep;clear;sudo apt-get install beep;;
+				"Y")apt-get install beep;clear;sudo apt-get install beep;;
+			esac
+	fi
 	ifconfig mon0 down
 	macchanger -a mon0
 	ifconfig mon0 up
@@ -36,6 +46,7 @@ fbotstart()																#Automagically find active clients and collect new ha
 	LNUM=0
 	sort -r $HOME/Desktop/cap/handshakes/got > $HOME/Desktop/cap/handshakes/got2
 	mv $HOME/Desktop/cap/handshakes/got2 $HOME/Desktop/cap/handshakes/got
+	modprobe pcspkr
 	fhunt
 }
 
@@ -136,10 +147,11 @@ fautocap()
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 	DONE=""
 	DECNT=0
+	beep -f 1000 -l 400
 	while [ $DONE -z ] 2> /dev/null
 		do
 			clear
-			$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+			$COLOR 2;$COLOR2 1;echo " [>] STOP THE CAR! [<] ";$COLOR 9;$COLOR2 9
 			$COLOR 4;$COLOR2 3; echo " [*] TARGET $ESSID LOADED [*] ";$COLOR 9;$COLOR2 9
 			echo
 			sleep 1
@@ -151,7 +163,6 @@ fautocap()
 			sleep 3
 			DONE2=""
 			fanalyze
-			sleep 0.5
 			DECNT=$((DECNT + 1))
 			if [ $DECNT -gt 5 ] 2> /dev/null
 				then
@@ -162,12 +173,14 @@ fautocap()
 				then
 					DONE=1
 				else
+					beep -f 200 -l 100
 					$COLOR 1; echo " [*] No handshake detected ";$COLOR 9
 					$COLOR 1; echo $ISDONE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
-					sleep 0.7
+					sleep 1
 					DONE=""
 			fi
 		done
+	beep -f 1000 -l 90 -r 3
 	clear
 	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! [*] ";$COLOR 9;$COLOR2 9
 	echo
