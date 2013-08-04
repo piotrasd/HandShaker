@@ -147,7 +147,8 @@ fautocap()
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 	DONE=""
 	DECNT=0
-	beep -f 1000 -l 400
+	beep -f 1000 -l 100
+	beep -f 1600 -l 200
 	while [ $DONE -z ] 2> /dev/null
 		do
 			clear
@@ -173,14 +174,18 @@ fautocap()
 				then
 					DONE=1
 				else
-					beep -f 200 -l 100
+					beep -f 100 -l 100
+					beep -f 50 -l 100
+					
 					$COLOR 1; echo " [*] No handshake detected ";$COLOR 9
 					$COLOR 1; echo $ISDONE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
 					sleep 1
 					DONE=""
 			fi
 		done
-	beep -f 1000 -l 90 -r 3
+	beep -f 1300 -l 30 -r 2
+	beep -f 1450 -l 30 -r 1
+	beep -f 1600 -l 60 -r 1
 	clear
 	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! [*] ";$COLOR 9;$COLOR2 9
 	echo
