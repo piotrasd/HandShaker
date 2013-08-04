@@ -201,7 +201,7 @@ fautocap()
 
 fanalyze()																#Analyze handshakes
 {
-	
+	GDONE=""
 	while [ $(echo $ISDONE | grep $BSSID) -z ] 2> /dev/null
 		do
 			sleep 0.5
