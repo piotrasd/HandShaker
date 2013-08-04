@@ -88,7 +88,6 @@ fhunt()																	#find new active clients that havn't been handshaked yet
 	ESSID=${ESSID:1}
 	if [ $ESSID -z ] 2>/dev/null
 		then
-			echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
 			fhunt
 		else
 			if [ "$LASTBSSID" != "$BSSID" ] 2> /dev/null
