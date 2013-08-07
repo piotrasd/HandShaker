@@ -20,15 +20,30 @@ fbotstart()																#Automagically find active clients and collect new ha
 			$COLOR 1;echo " [*] You need beep to be able to hear new handshakes, do you want to install now? [Y/n] ";$COLOR 9
 			read -p "  >" DOINSTALL
 			case $DOINSTALL in
-				"")apt-get install beep;clear;sudo apt-get install beep;;
-				"y")apt-get install beep;clear;sudo apt-get install beep;;
-				"Y")apt-get install beep;clear;sudo apt-get install beep;;
+				"")if [ $(whoami) = 'root' ] 2> /dev/null
+						then
+							apt-get install beep
+						else
+							sudo apt-get install beep
+					fi;clear;;
+				"y")if [ $(whoami) = 'root' ] 2> /dev/null
+						then
+							apt-get install beep
+						else
+							sudo apt-get install beep
+					fi;clear;;
+				"Y")if [ $(whoami) = 'root' ] 2> /dev/null
+						then
+							apt-get install beep
+						else
+							sudo apt-get install beep
+					fi;clear;;
 			esac
 	fi
 	ifconfig mon0 down
 	macchanger -a mon0
 	ifconfig mon0 up
-	sleep 1
+	sleep 0.5
 	clear
 	$COLOR 2;$COLOR2 1;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
 	echo
@@ -162,8 +177,9 @@ fautocap()
 							A=1
 						else
 							CLIE=$(cat $HOME/tmp8 | sed -n "$CLINUM"p)
+							CLINUM=$((CLINUM + 1))
 					fi
-					CLINUM=$((CLINUM + 1))
+					
 			fi
 			clear
 			$COLOR2 1;echo " [>] STOP THE CAR! [<] "
@@ -213,7 +229,7 @@ fautocap()
 	echo
 	GDONE=""
 	killall airodump-ng
-	echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
+	echo "$ESSID - BSSID:$BSSID CH:$CHAN" >> $HOME/Desktop/cap/handshakes/got
 	pyrit -r $HOME/tmp1-01.cap -o "$HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap" strip | grep 'New pcap-file'
 	$COLOR 2;echo $ANALYZE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
 	rm -rf $HOME/tmp*
@@ -245,21 +261,21 @@ fanalyze()																#Analyze handshakes
 				else
 					DONE2=1
 			fi
-			if [ $( cat $HOME/tmp4 | grep "bad") -z ] 2> /dev/null
+			if [ $(cat $HOME/tmp4 | grep "bad") -z ] 2> /dev/null
 				then
 					A=1
 				else
 					DONE2=1
 			fi
 			
-			if [ $( cat $HOME/tmp4 | grep "workable") -z ] 2> /dev/null
+			if [ $(cat $HOME/tmp4 | grep "workable") -z ] 2> /dev/null
 				then
 					A=1
 				else
 					DONE2=1
 					GDONE=1
 			fi
-			if [ $( cat $HOME/tmp4 | grep "good") -z ] 2> /dev/null
+			if [ $(cat $HOME/tmp4 | grep "good") -z ] 2> /dev/null
 				then
 					A=1
 				else
@@ -362,7 +378,7 @@ fclientscan()															#Find active clients
 	rm -rf $HOME/tmp* 2> /dev/null
 	CNT="0"
 	clear
-	$COLOR 2;echo " [*] Attacking $ESSID  BSSID:$BSSID CHANNEL:$CHAN [*] "
+	$COLOR 2;echo " [*] Attacking $ESSID BSSID:$BSSID CHANNEL:$CHAN [*] "
 	echo
 	$COLOR 4;echo ' [*] Please wait while I find active clients.. [*] ';$COLOR 9
 	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
@@ -430,7 +446,7 @@ fcap()																	#Deauth, capture and strip handshakes
 	clear
 	if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSID) -z ] 2>/dev/null
 		then
-			echo "$BSSID" >> $HOME/Desktop/cap/handshakes/got
+			echo "$ESSID - BSSID:$BSSID CH:$CHAN" >> $HOME/Desktop/cap/handshakes/got
 	fi
 	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
 	DATE=$( date +%Y_%m_%d_%H%M%S )
