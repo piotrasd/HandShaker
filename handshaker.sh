@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## HandShaker Copyright 2013, d4rkcat (d4rkc4t@tormail.org)
+## Handshaker Copyright 2013, rfarage (rfarage@yandex.com)
 #
 ## This program is free software: you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 fhelp()																	#Help
 {
 	clear
-	echo """ HandShaker - Detect, deauth, capture and crack WPA/2 handshakes
+	echo """ handshaker - Detect, deauth, capture and crack WPA/2 handshakes
 	
 	Usage: 	handshaker <Method> <Options> [in any order]
 	
