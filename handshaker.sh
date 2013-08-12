@@ -13,6 +13,31 @@
 ## GNU General Public License at (http://www.gnu.org/licenses/) for
 ## more details.
 
+
+fhelp()																	#Help
+{
+	clear
+	echo
+	echo """ HandShaker - Detect, capture and crack WPA/2 handshakes by partial unique ESSID
+	
+	Usage: handshaker <Method> <Options> [in any order]
+	
+		Method:
+			-a - Autobot or Wardriving mode
+			-e - Search for AP by partial unique ESSID
+			-l - Scan for APs and present a target list
+		Options:
+			-i - Wireless Interface card
+			-w - Wordlist to use for cracking
+			-h - This help
+				
+	eg. handshaker -e Hub3-F -i wlan0 -w /usr/share/wordlists/rockyou.txt	 - Search for essids like Hub3-F using wlan0 and crack with wordlist
+	    handshaker -a -i wlan0 						 - Autobot or wardriving mode using wlan0
+	
+"""
+	exit
+}
+
 fbotstart()																#Automagically find active clients and collect new handshakes
 {	
 	if [ $(which beep) -z ] 2> /dev/null
@@ -182,9 +207,10 @@ fautocap()
 					
 			fi
 			clear
+			CLINUMP=$((CLINUM - 1))
 			$COLOR2 1;echo " [>] STOP THE CAR! [<] "
 			$COLOR 2;echo " [*] TARGET ESSID: $ESSID LOADED [*] "
-			echo " [*] TARGET CLIENT: $CLIE LOADED [*]";$COLOR2 9;$COLOR 9
+			echo " [*] TARGET CLIENT $CLINUMP: $CLIE LOADED [*]";$COLOR2 9;$COLOR 9
 			echo
 			sleep 0.7
 			echo " [>] FIRE! [<] "
@@ -295,8 +321,11 @@ fapscan()																#Determine target AP BSSID and channel
 	while [ $DONE -z ] 2> /dev/null
 		do
 			sleep 0.3
-			DONE=$(cat $HOME/tmp-01.csv 2> /dev/null | grep $PARTIALESSID)
-			ESSID=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 14 | head -n 1)
+			if [ -f $HOME/tmp-01.csv ] 2> /dev/null
+				then
+					DONE=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID)
+					ESSID=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 14 | head -n 1)
+			fi
 			if [ $ESSID -z ] 2> /dev/null
 				then
 					DONE=""
@@ -324,49 +353,23 @@ flistap()																#List all APs
 	while read LINE
 		do
 			LNUM=$((LNUM + 1))
-			case $LNUM in
-				1)ESSID1=" [1] $LINE";;
-				2)ESSID2=" [2] $LINE";;
-				3)ESSID3=" [3] $LINE";;
-				4)ESSID4=" [4] $LINE";;
-				5)ESSID5=" [5] $LINE";;
-				6)ESSID6=" [6] $LINE";;
-				7)ESSID7=" [7] $LINE";;
-				8)ESSID8=" [8] $LINE";;
-				9)ESSID9=" [9] $LINE"
-			esac
+			case $LNUM in 1)ESSID1=" [1] $LINE";;2)ESSID2=" [2] $LINE";;3)ESSID3=" [3] $LINE";;4)ESSID4=" [4] $LINE";;5)ESSID5=" [5] $LINE";;6)ESSID6=" [6] $LINE";;7)ESSID7=" [7] $LINE";;8)ESSID8=" [8] $LINE";;9)ESSID9=" [9] $LINE";;10)ESSID10=" [10] $LINE";;11)ESSID11=" [11] $LINE";;12)ESSID12=" [12] $LINE";;13)ESSID13=" [13] $LINE";;14)ESSID14=" [14] $LINE";;15)ESSID15=" [15] $LINE";;16)ESSID16=" [16] $LINE";;17)ESSID17=" [17] $LINE";;18)ESSID18=" [18] $LINE";;19)ESSID19=" [19] $LINE";;20)ESSID20=" [20] $LINE";;21)ESSID21=" [21] $LINE";;22)ESSID22=" [22] $LINE";;23)ESSID23=" [23] $LINE";;24)ESSID24=" [24] $LINE";;25)ESSID25=" [25] $LINE";;26)ESSID26=" [26] $LINE";;27)ESSID27=" [27] $LINE"  ;esac
 		done <$HOME/tmp1
 	clear
+	if [ $LNUM -gt 27 ] 2> /dev/null
+		then
+			LNUM=27
+	fi
 	$COLOR 4;echo " [*] $LNUM APs found:";$COLOR 9
 	DNUM=0
 	while [ $DNUM -le $LNUM ]
 		do
 			DNUM=$((DNUM + 1))
-			case $DNUM in
-				1)echo $ESSID1;;
-				2)echo $ESSID2;;
-				3)echo $ESSID3;;
-				4)echo $ESSID4;;
-				5)echo $ESSID5;;
-				6)echo $ESSID6;;
-				7)echo $ESSID7;;
-				8)echo $ESSID8;;
-				9)echo $ESSID9
-			esac
+			case $DNUM in 1)echo $ESSID1;;2)echo $ESSID2;;3)echo $ESSID3;;4)echo $ESSID4;;5)echo $ESSID5;;6)echo $ESSID6;;7)echo $ESSID7;;8)echo $ESSID8;;9)echo $ESSID9;;10)echo $ESSID10;;11)echo $ESSID11;;12)echo $ESSID12;;13)echo $ESSID13;;14)echo $ESSID14;;15)echo $ESSID15;;16)echo $ESSID16;;17)echo $ESSID17;;18)echo $ESSID18;;19)echo $ESSID19;;20)echo $ESSID20;;21)echo $ESSID21;;22)echo $ESSID22;;23)echo $ESSID23;;24)echo $ESSID24;;25)echo $ESSID25;;26)echo $ESSID26;;27)echo $ESSID27;esac
 		done
 	$COLOR 4;echo " [>] Please choose an AP ";$COLOR 9
 	read -p "  >" AP
-	case $AP in
-				1)ESSID=${ESSID1:5};;
-				2)ESSID=${ESSID2:5};;
-				3)ESSID=${ESSID3:5};;
-				4)ESSID=${ESSID4:5};;
-				5)ESSID=${ESSID5:5};;
-				6)ESSID=${ESSID6:5};;
-				7)ESSID=${ESSID7:5};;
-				8)ESSID=${ESSID8:5};;
-				9)ESSID=${ESSID9:5}
-	esac
+	case $AP in 1)ESSID=${ESSID1:5};;2)ESSID=${ESSID2:5};;3)ESSID=${ESSID3:5};;4)ESSID=${ESSID4:5};;5)ESSID=${ESSID5:5};;6)ESSID=${ESSID6:5};;7)ESSID=${ESSID7:5};;8)ESSID=${ESSID8:5};;9)ESSID=${ESSID9:5};;10)ESSID=${ESSID10:5};;11)ESSID=${ESSID11:5};;12)ESSID=${ESSID12:5};;13)ESSID=${ESSID13:5};;14)ESSID=${ESSID14:5};;15)ESSID=${ESSID15:5};;16)ESSID=${ESSID16:5};;17)ESSID=${ESSID17:5};;18)ESSID=${ESSID18:5};;19)ESSID=${ESSID19:5};;20)ESSID=${ESSID20:5};;21)ESSID=${ESSID21:5};;22)ESSID=${ESSID22:5};;23)ESSID=${ESSID23:5};;24)ESSID=${ESSID24:5};;25)ESSID=${ESSID25:5};;26)ESSID=${ESSID26:5};;27)ESSID=${ESSID27:5};esac
 	BSSID=$(cat $HOME/tmp-01.csv | grep "WPA" | grep $ESSID | cut -d ',' -f 1)
 	CHAN=$(cat $HOME/tmp-01.csv | grep "WPA" | grep $ESSID | cut -d ',' -f 4)
 	CHAN=$((CHAN + 1 - 1))
@@ -509,25 +512,6 @@ fexit()																	#Exit
 	exit
 }
 
-fhelp()																	#Help
-{
-	clear
-	echo
-	echo """ HandShaker - Detect, capture and crack WPA/2 handshakes by partial unique ESSID
-	Usage: handshaker x y z
-	
-			x - Partial unique ESSID
-			y - Wireless Interface card
-			z - path to wordlist to use for cracking
-				
-	eg. handshaker Hub3-F wlan0 /usr/share/wordlists/rockyou.txt
-	handshaker -a or --autobot gets you autobot or wardriving mode
-	eg. handshaker -a wlan3
-	
-"""
-	exit
-}
-
 fstart()																#Startup
 {
 	COLOR="tput setab"
@@ -580,34 +564,16 @@ fstart()																#Startup
 }
 
 trap fexit 2
-if [ $# -lt 1 ] 2> /dev/null
-	then
-		DO="L"
-fi
-case $1 in
-	"-a")AUTO="Y";;
-	"--autobot")AUTO="Y"
-esac
-PARTIALESSID="$1"
-if [ $3 -z ] 2> /dev/null
-	then
-		WORDLIST=""
-	else
-		WORDLIST=$3
-fi
-if [ ! -z $2 ] 2> /dev/null
-	then
-		MOND=$(ifconfig | grep mon0)
-		if [ $MOND -z ] 2> /dev/null
-			then
-				airmon-ng start $2
-		fi
-fi
+																		#Parse command line arguments
+case $1 in "-l")DO="L";;"-h")fhelp;;"-e")PARTIALESSID=$2;;"-i")MOND=$(ifconfig | grep mon0);if [ $MOND -z ] 2> /dev/null;then airmon-ng start $2;fi;;"-w")WORDLIST=$2;;"-a")AUTO="Y";esac
+case $2 in "-l")DO="L";;"-h")fhelp;;"-e")PARTIALESSID=$3;;"-i")MOND=$(ifconfig | grep mon0);if [ $MOND -z ] 2> /dev/null;then airmon-ng start $3;fi;;"-w")WORDLIST=$3;;"-a")AUTO="Y";esac
+case $3 in "-l")DO="L";;"-h")fhelp;;"-e")PARTIALESSID=$4;;"-i")MOND=$(ifconfig | grep mon0);if [ $MOND -z ] 2> /dev/null;then airmon-ng start $4;fi;;"-w")WORDLIST=$4;;"-a")AUTO="Y";esac
+case $4 in "-l")DO="L";;"-h")fhelp;;"-e")PARTIALESSID=$5;;"-i")MOND=$(ifconfig | grep mon0);if [ $MOND -z ] 2> /dev/null;then airmon-ng start $5;fi;;"-w")WORDLIST=$5;;"-a")AUTO="Y";esac
+case $5 in "-l")DO="L";;"-h")fhelp;;"-e")PARTIALESSID=$6;;"-i")MOND=$(ifconfig | grep mon0);if [ $MOND -z ] 2> /dev/null;then airmon-ng start $6;fi;;"-w")WORDLIST=$6;;"-a")AUTO="Y";esac
+case $6 in "-l")DO="L";;"-h")fhelp;;"-e")PARTIALESSID=$7;;"-i")MOND=$(ifconfig | grep mon0);if [ $MOND -z ] 2> /dev/null;then airmon-ng start $7;fi;;"-w")WORDLIST=$7;;"-a")AUTO="Y";esac
+case $7 in "-l")DO="L";;"-h")fhelp;;"-e")PARTIALESSID=$8;;"-i")MOND=$(ifconfig | grep mon0);if [ $MOND -z ] 2> /dev/null;then airmon-ng start $8;fi;;"-w")WORDLIST=$8;;"-a")AUTO="Y";esac
 
-if [ $1 = "--help" ] 2> /dev/null
-	then
-		fhelp
-elif [ $1 = "-h" ] 2> /dev/null
+if [ $# -lt 1 ] 2> /dev/null
 	then
 		fhelp
 fi
