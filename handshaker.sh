@@ -17,8 +17,7 @@
 fhelp()																	#Help
 {
 	clear
-	echo
-	echo """ HandShaker - Detect, capture and crack WPA/2 handshakes by partial unique ESSID
+	echo """ HandShaker - Detect, deauth, capture and crack WPA/2 handshakes
 	
 	Usage: handshaker <Method> <Options> [in any order]
 	
