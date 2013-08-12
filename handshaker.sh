@@ -13,13 +13,12 @@
 ## GNU General Public License at (http://www.gnu.org/licenses/) for
 ## more details.
 
-
 fhelp()																	#Help
 {
 	clear
 	echo """ HandShaker - Detect, deauth, capture and crack WPA/2 handshakes
 	
-	Usage: handshaker <Method> <Options> [in any order]
+	Usage: 	handshaker <Method> <Options> [in any order]
 	
 		Method:
 			-a - Autobot or Wardriving mode
@@ -30,8 +29,8 @@ fhelp()																	#Help
 			-w - Wordlist to use for cracking
 			-h - This help
 				
-	eg. handshaker -e Hub3-F -i wlan0 -w /usr/share/wordlists/rockyou.txt	 - Search for essids like Hub3-F using wlan0 and crack with wordlist
-	    handshaker -a -i wlan0 						 - Autobot or wardriving mode using wlan0
+	Examples: handshaker -e Hub3-F -i wlan0 -w /usr/share/wordlists/rockyou.txt	 - Search for essids like Hub3-F using wlan0 and crack with wordlist
+		  handshaker -a -i wlan0 						 - Autobot or wardriving mode using wlan0
 	
 """
 	exit
