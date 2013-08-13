@@ -16,22 +16,23 @@
 fhelp()																	#Help
 {
 	clear
-	echo """ handshaker - Detect, deauth, capture and crack WPA/2 handshakes
+	echo """ 
+handshaker - Detect, deauth, capture and crack WPA/2 handshakes
 	
 	Usage: 	handshaker <Method> <Options> [in any order]
 	
-		Method:
-			-a - Autobot or Wardriving mode
-			-e - Search for AP by partial unique ESSID
-			-l - Scan for APs and present a target list
-		Options:
-			-i - Wireless Interface card
-			-w - Wordlist to use for cracking
-			-h - This help
-				
-	Examples: handshaker -e Hub3-F -i wlan0 -w /usr/share/wordlists/rockyou.txt	 - Search for essids like Hub3-F using wlan0 and crack with wordlist
-		  handshaker -a -i wlan0 						 - Autobot or wardriving mode using wlan0
-	
+	Method:
+		-a - Autobot or Wardriving mode
+		-e - Search for AP by partial unique ESSID
+		-l - Scan for APs and present a target list
+	Options:
+		-i - Wireless Interface card
+		-w - Wordlist to use for cracking
+		-h - This help
+			
+	Examples: 
+		 handshaker -e Hub3-F -i wlan0 -w wordlist.txt	 - Search for APs like 'Hub3-F' using wlan0 and crack
+		 handshaker -a -i wlan0 			 - Autobot or wardriving mode using wlan0
 """
 	exit
 }
@@ -540,7 +541,7 @@ fstart()																#Startup
 	
 	if [ $(ifconfig | grep mon0) -z ] 2> /dev/null
 		then
-			$COLOR 1;echo " [*] ERROR: $NIC is not available"
+			$COLOR 1;echo " [*] ERROR: $NIC is not available";$COLOR 9
 			fexit
 	fi
 	
