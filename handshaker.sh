@@ -31,8 +31,8 @@ handshaker - Detect, deauth, capture and crack WPA/2 handshakes
 		-h - This help
 			
 	Examples: 
-		 handshaker -e Hub3-F -i wlan0 -w wordlist.txt	 - Search for APs like 'Hub3-F' using wlan0 and crack
-		 handshaker -a -i wlan0 			 - Autobot or wardriving mode using wlan0
+		 handshaker -e Hub3-F -i wlan0 -w wordlist.txt	 ~ Search for APs like 'Hub3-F' using wlan0 and crack
+		 handshaker -a -i wlan0 			 ~ Autobot or wardriving mode using wlan0
 """
 	exit
 }
