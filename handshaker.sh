@@ -448,17 +448,17 @@ fcap()																	#Deauth, capture and strip handshakes
 	clear
 	if [ $(cat /cap/handshakes/got | grep $BSSID) -z ] 2>/dev/null
 		then
-			echo "$ESSID - BSSID:$BSSID CH:$CHAN" >> $HOME/Desktop/cap/handshakes/got
+			echo "$ESSID - BSSID:$BSSID CH:$CHAN" >> /usb/cap/handshakes/got
 	fi
 	$COLOR 4;echo " [*] Saving and stripping handshake, please wait... [*] ";$COLOR 9
 	DATE=$( date +%Y_%m_%d_%H%M%S )
 	ESSID=$(echo "$ESSID" | sed 's/ /_/g')
-	pyrit -r $HOME/tmp1-01.cap -o $HOME/Desktop/cap/handshakes/$ESSID-$DATE.cap strip | grep 'New pcap-file'
+	pyrit -r /usb/tmp1-01.cap -o /usb/cap/handshakes/$ESSID-$DATE.cap strip | grep 'New pcap-file'
 	airmon-ng stop mon0
-	rm -rf $HOME/tmp*
+	rm -rf /usb/tmp*
 	clear
 	$COLOR 2;echo " [*] Handshake capture was successful!, Horray for you ";$COLOR 9
-	$COLOR 2;echo " [*] Handshake saved to $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap "";$COLOR 9
+	$COLOR 2;echo " [*] Handshake saved to /usb/cap/handshakes/$ESSID-$DATE".cap "";$COLOR 9
 	if [ $WORDLIST -z ] 2> /dev/null
 		then
 			$COLOR 4; echo " [>] Do you want to crack now? [Y/n] ";$COLOR 9
@@ -491,7 +491,7 @@ fcrack()																#Crack handshakes
 			sleep 1
 			fcrack
 		else
-			aircrack-ng -w $WORDLIST $HOME/Desktop/cap/handshakes/$ESSID-$DATE".cap"
+			aircrack-ng -w $WORDLIST /usb/cap/handshakes/$ESSID-$DATE".cap"
 	fi
 	fexit
 }
@@ -500,7 +500,7 @@ fexit()																	#Exit
 {
 	tput setab 9
 	killall aircrack-ng 2> /dev/null
-	rm -rf $HOME/tmp* 2> /dev/null
+	rm -rf /usb/tmp* 2> /dev/null
 	MOND=$(ifconfig | grep mon0)
 	if [ $MOND -z ] 2> /dev/null
 		then
@@ -517,9 +517,9 @@ fstart()																#Startup
 	COLOR2="tput setaf"
 	CHKEX=1
 	MOND=$(ifconfig | grep mon0)
-	mkdir -p $HOME/Desktop/cap
-	mkdir -p $HOME/Desktop/cap/handshakes
-	touch $HOME/Desktop/cap/handshakes/got
+	mkdir -p /usb/cap
+	mkdir -p /usb/handshakes
+	touch /usb/cap/handshakes/got
 	MNUM=0
 
 	if [ $MOND -z ] 2> /dev/null
